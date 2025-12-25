@@ -1,0 +1,14 @@
+const mongoose = require("mongoose");
+
+const {{camelCase name}}Schema = new mongoose.Schema(
+    {
+    // Add your fields here
+    },
+    {
+    timestamps: true,
+    }
+);
+
+const {{pascalCase name}} = mongoose.model("{{pascalCase name}}", {{camelCase name}}Schema);
+
+module.exports = {{pascalCase name}};
