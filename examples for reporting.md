@@ -5,9 +5,9 @@
   "data": [
     {
       "appointmentId": "a123",
-      "patientName": "John Doe",
+      "patientName": "AdnanQw",
       "doctorName": "Dr. Sarah Ali",
-      "specialty": "Cardiology",
+      "specialty": "Dermatology",
       "startAt": "2025-01-10T09:00:00Z",
       "endAt": "2025-01-10T09:30:00Z",
       "status": "CONFIRMED",
@@ -22,6 +22,7 @@
   }
 }
 ```
+
 # 📊 Summary Report – Example Response
 
 ```json
