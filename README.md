@@ -83,102 +83,6 @@ GET /api/v1/reports/appointment-status | Report on booking confirmations/cancell
 | **Admin** | Full access: CRUD on Users, Doctors, Specialties, Appointments, Reports, Audit Logs |
 ---
 
-## 📁 **Project Structure**
-
-```bash
-smart_health_center/
-├── src/
-│   ├── app.js                    # Server entry point
-│   ├── config/                   # DB, env, server settings
-│   ├── controllers/              # Route handlers
-│   ├── middlewares/              # Auth, logging, error handling
-│   ├── models/                   # Mongoose schemas
-│   ├── services/                 # Business logic
-│   ├── routes/                   # API route definitions
-│   ├── utils/                    # Helper functions
-│   └── validations/              # Input validation (Joi/Zod)
-├── uploads/                      # User-uploaded files
-├── templates/                    # Plop.js scaffolding
-├── package.json
-├── .env
-└── README.md
-```
-
----
-
-## 📦 **Libraries Used**
-
-| Library | Purpose |
-|-------|--------|
-| `express` | Web framework |
-| `mongoose` | MongoDB ODM |
-| `jsonwebtoken` | JWT authentication |
-| `argonaut2` | Secure password hashing |
-| `express-validator` | Input validation |
-| `helmet` | Security headers |
-| `cors` | Cross-origin requests |
-| `xss-clean` | XSS protection |
-| `nodemon` | Auto-restart dev server |
-| `plop` | Code generation |
-| `exceljs` | Export to Excel |
-| `pdfkit` | Generate PDF reports |
-| `dayjs` | Date handling |
-| `socket.io` | Real-time notifications |
-
----
-
-## 🧪 **Testing & Security**
-
-- ✅ **Input Validation**: All fields validated with `express-validator`
-- ✅ **XSS Prevention**: `xss-clean` middleware
-- ✅ **NoSQL Injection**: Sanitized queries
-- ✅ **Centralized Error Handling**: Clear, consistent responses
-- ✅ **Audit Logging**: All key actions logged
-- ✅ **Rate Limiting**: Protect against brute-force attacks
-
----
-
-## 🔄 **Future Enhancements**
-
-1. **Email Notifications** (SendGrid/Nodemailer)
-2. **Real-Time Updates** (Socket.io)
-3. **Mobile App Integration**
-4. **Multi-Language Support**
-5. **AI-Powered Recommendations**
-
----
-
-## 📝 **How to Run Locally**
-
-```bash
-git clone https://github.com/yourusername/smart_health_center.git
-cd smart_health_center
-npm install
-cp .env.example .env
-npm run dev
-```
-
-> ✅ Ensure MongoDB is running.
-
----
-
-## 🤝 **Contributing**
-
-Open to PRs! Please follow the code style and documentation standards.
-
----
-
-## 📄 **License**
-
-MIT License
-
----
-
-✅ **This project is ready for production with a solid foundation**.  
-Let me know if you want a **Postman Collection**, **Swagger Docs**, or **Docker Setup**!
-
-Happy coding! 💻
-
 ## Project Structure
 ```bash
 smart_health_center-appointments/
@@ -206,73 +110,31 @@ smart_health_center-appointments/
 ├── .gitignore                # Specifies files/folders Git should ignore (e.g., node_modules, .env)
 └── README.md                 # This documentation file 
 ```
+## 📦 **Libraries Used**
 
-## Libraries
+| Library | Purpose |
+|-------|--------|
+| `express` | Web framework for Node.js to build APIs and web applications |
+| `mongoose` | ODM (Object Data Modeling) library for MongoDB and Node.js |
+| `jsonwebtoken` | Library for creating and verifying JSON Web Tokens (JWT) for authentication |
+| `argon2` | Password hashing library using the Argon2 algorithm for secure password storage |
+| `express-validator` | Set of middleware for validating and sanitizing user input data |
+| `helmet` | Security middleware that sets various HTTP headers to protect the app |
+| `cors` | Middleware to enable Cross-Origin Resource Sharing (CORS) for different domains |
+| `xss-clean` | Library to sanitize user input and prevent XSS (Cross-Site Scripting) attacks |
+| `nodemon` | Development tool that automatically restarts the server when code changes are detected |
+| `plop` | Code generator tool for automating file and component creation |
+| `exceljs` | Export reports to Excel (.xlsx) format |
+| `pdfkit` | Generate PDF reports |
+| `dayjs` | Lightweight date handling library for appointments, reports, and scheduling |
+| `socket.io` | Real-time, bidirectional communication between client and server (notifications, live updates) |
+| `dotenv` | Loads environment variables from a `.env` file into `process.env` |
+| `morgan` | HTTP request logger middleware for logging incoming requests |
+| `cookie-parser` | Middleware to parse cookies attached to the client request object |
+| `express-rate-limit` | Rate-limiting middleware to prevent brute-force attacks |
+| `nodemailer` | Module for sending emails from Node.js applications |
 
-### ✅ **express**
-Web framework for Node.js used to build web applications and APIs.
-
-### ✅ **nodemon**
-Development tool that automatically restarts the server when code changes are detected.
-
-### ✅ **dotenv**
-Loads environment variables from a `.env` file into `process.env`.
-
-### ✅ **morgan**
-HTTP request logger middleware for logging incoming requests.
-
-### ✅ **plop**
-Code generator tool for automating file and component creation.
-
-### ✅ **mongoose**
-ODM (Object Data Modeling) library for MongoDB and Node.js.
-
-### ✅ **jsonwebtoken**
-
-Library for creating and verifying JSON Web Tokens for authentication.
-### ✅ **cookie-parser**
-Middleware to parse cookies attached to the client request object.
-
-### ✅ **argon2**
-Password hashing library using the Argon2 algorithm for secure password storage.
-
-### ✅ **express-rate-limit**
-Basic rate-limiting middleware to prevent brute-force attacks.
-### ✅ **helmet**
-Security middleware that sets various HTTP headers to protect the app.
-
-### ✅ **cors**
-Middleware to enable Cross-Origin Resource Sharing for different domains.
-
-### ✅ **xss-clean**
-Library to sanitize user input and prevent XSS (Cross-Site Scripting) attacks.
-The usage automatic and the protects (Body, query, params) developer error risk low
-
-### ✅ **express-validator**
-Set of middleware for validating and sanitizing user input data.
-
-### ✅ **nodemailer**
-Module for sending emails from Node.js applications.
-
-### ✅ **socket.io**
-Library that enables real-time, bidirectional and event-based communication between client and server.
-
-### ➕ **plop**
-Keeps code formatting consistent across the team.
-
-## for Advanced Features
-
-### ➕ **exceljs**
-Export reports to Excel.
-
-### ➕ **pdfkit**
-Generate PDF reports.
-
-### ➕ **uuid**
-Generate unique IDs for logs and reports.
-
-### ➕ **dayjs**
-Date handling (appointments, reports).
+---
 
 ## Advanced Features Planning
 
