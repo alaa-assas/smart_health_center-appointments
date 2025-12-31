@@ -1,3 +1,79 @@
+## API EndPoint
+
+> `HTTP Method /endpoint | Description | Auth | Role`
+---
+
+### 📡 **Authentication & Users**
+
+```
+POST /api/v1/auth/register | Create a user account (automatically assigned role: Patient) | No | Patient
+POST /api/v1/auth/login | Log in with email and password | No | None
+POST /api/v1/auth/logout | Log out the current user | Yes | None
+POST /api/v1/auth/refresh-token | Refresh JWT tokens | Yes | None
+GET /api/v1/auth/profile | View logged-in user profile (doctor includes specialty & schedule) | Yes | None
+PUT /api/v1/auth/profile | Update user profile (doctor can edit schedules) | Yes | None
+```
+
+---
+
+### 🩺 **Specialties Operations**
+
+```
+POST /api/v1/specialties | Admin adds a new medical specialty | Yes | Admin
+PUT /api/v1/specialties/:id | Update an existing specialty | Yes | Admin
+GET /api/v1/specialties | Get all specialties | Yes | Admin
+GET /api/v1/specialties/:id | Get details of a specific specialty | Yes | Admin
+DELETE /api/v1/specialties/:id | Remove a specialty from the system | Yes | Admin
+```
+
+---
+
+### 👨‍⚕️ **Doctor & Schedule Operations**
+
+```
+POST /api/v1/doctors | Admin adds a doctor + their schedule | Yes | Admin
+PUT /api/v1/doctors/:id | Update doctor info & schedule | Yes | Admin
+GET /api/v1/doctors | Get all doctors with search/filter options (name, specialty, location) | No | None
+GET /api/v1/doctors/:id | Get doctor details + specialty, schedule, reviews | No | None
+DELETE /api/v1/doctors/:id | Remove doctor + delete their schedule | Yes | Admin
+```
+
+---
+
+### 📅 **Appointment Operations**
+
+```
+POST /api/v1/appointments | Patient books an appointment with a doctor | Yes | Patient, Admin
+PATCH /api/v1/appointments/status/:id | Doctor updates appointment status (confirmed, canceled, completed) | Yes | Doctor, Admin
+PUT /api/v1/appointments/:id | Patient modifies appointment details | Yes | Patient
+GET /api/v1/appointments/for-doctor | Get appointments for logged-in doctor (filter by date) | Yes | Doctor
+GET /api/v1/appointments/for-patient | Get appointments for logged-in patient (filter by status) | Yes | Patient
+GET /api/v1/appointments/:id | Get details of a specific appointment | Yes | Patient, Doctor, Admin
+GET /api/v1/appointments/available/:doctorId | Get available slots for a doctor on a given date | Yes | Patient, Doctor, Admin
+```
+
+---
+
+### ⭐ **Review Operations**
+
+```
+POST /api/v1/reviews | Patient adds a review for a completed appointment | Yes | Patient
+PUT /api/v1/reviews/:id | Patient updates their review (stars & comment only) | Yes | Patient
+GET /api/v1/reviews/ | Get all reviews (filter by date) | Yes | Admin
+GET /api/v1/reviews/:id | Get detailed review with patient & doctor details | Yes | Admin, Patient, Doctor
+DELETE /api/v1/reviews/:id | Patient deletes their own review | Yes | Patient
+```
+
+---
+
+### 📊 **Reports**
+
+```
+GET /api/v1/reports/logins | Export login reports (filtered by date) | Yes | Admin
+GET /api/v1/reports/appointment | Export appointment reports (filtered by date) | Yes | Admin
+GET /api/v1/reports/appointment-status | Report on booking confirmations/cancellations (filter by date/status) | Yes | Admin
+```
+
 ## Project Structure
 ```bash
 smart_health_center-appointments/
@@ -26,94 +102,74 @@ smart_health_center-appointments/
 └── README.md                 # This documentation file 
 ```
 
-# Project Dependencies Documentation
-
 ## Libraries
 
-### ✅ `express`
+### ✅ **express**
 Web framework for Node.js used to build web applications and APIs.
 
-### ✅ `nodemon`
+### ✅ **nodemon**
 Development tool that automatically restarts the server when code changes are detected.
 
-### ✅ `dotenv`
+### ✅ **dotenv**
 Loads environment variables from a `.env` file into `process.env`.
 
-### ✅ `morgan`
+### ✅ **morgan**
 HTTP request logger middleware for logging incoming requests.
 
-### ✅ `plop`
+### ✅ **plop**
 Code generator tool for automating file and component creation.
 
-### ✅ `mongoose`
+### ✅ **mongoose**
 ODM (Object Data Modeling) library for MongoDB and Node.js.
 
-### ✅ `jsonwebtoken`
+### ✅ **jsonwebtoken**
 
 Library for creating and verifying JSON Web Tokens for authentication.
-### ✅ `cookie-parser`
+### ✅ **cookie-parser**
 Middleware to parse cookies attached to the client request object.
 
-### ✅ `argon2`
+### ✅ **argon2**
 Password hashing library using the Argon2 algorithm for secure password storage.
 
-### ✅ `express-rate-limit`
+### ✅ **express-rate-limit**
 Basic rate-limiting middleware to prevent brute-force attacks.
-### ✅ `helmet`
+### ✅ **helmet**
 Security middleware that sets various HTTP headers to protect the app.
 
-### ✅ `cors`
+### ✅ **cors**
 Middleware to enable Cross-Origin Resource Sharing for different domains.
 
-### ❌ `xss` replace it with ✅ `xss-clean`
+### ✅ **xss-clean**
 Library to sanitize user input and prevent XSS (Cross-Site Scripting) attacks.
 The usage automatic and the protects (Body, query, params) developer error risk low
-and cleaner code:
-```js
-import xssClean from "xss-clean";
 
-app.use(xssClean());
-```
-
-### ✅ `express-validator`
+### ✅ **express-validator**
 Set of middleware for validating and sanitizing user input data.
 
-### ✅ `nodemailer`
+### ✅ **nodemailer**
 Module for sending emails from Node.js applications.
 
-### ✅ `socket.io`
+### ✅ **socket.io**
 Library that enables real-time, bidirectional and event-based communication between client and server.
 
-### ➕ `prettier`
+### ➕ **plop**
 Keeps code formatting consistent across the team.
 
 ## for Advanced Features
 
-### ➕ `exceljs`
+### ➕ **exceljs**
 Export reports to Excel.
 
-### ➕ `pdfkit` or `puppeteer`
+### ➕ **pdfkit**
 Generate PDF reports.
 
-### ➕ `uuid`
+### ➕ **uuid**
 Generate unique IDs for logs and reports.
 
-### ➕ `dayjs`
+### ➕ **dayjs**
 Date handling (appointments, reports).
 
-## Best for testing
-
-### ➕ `jest`
-Unit and integration testing.
-
-### ➕ `supertest`
-API endpoint testing.
-
-# Advanced Features Planning
-
-Smart Health Center Appointment Booking System
-
----
+## Advanced Features Planning
 
 ## 1. Notifications & Reminders
 
@@ -276,7 +332,7 @@ Smart Health Center Appointment Booking System
 
 ### 4.1 Input Validation
 
-- Validate all request data using Joi or express-validator.
+- Validate all request data using express-validator.
 - Validate dates, roles, IDs, and appointment times.
 
 ### 4.2 HTTP & API Security
