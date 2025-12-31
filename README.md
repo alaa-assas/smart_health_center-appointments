@@ -74,6 +74,111 @@ GET /api/v1/reports/appointment | Export appointment reports (filtered by date) 
 GET /api/v1/reports/appointment-status | Report on booking confirmations/cancellations (filter by date/status) | Yes | Admin
 ```
 
+### 👥 **Roles & Permissions (RBAC)**
+
+| Role | Permissions |
+|------|-------------|
+| **Patient** | Register, Login, View Doctors, Book Appointments, Cancel Appointments, Rate Doctors |
+| **Doctor** | View Appointments, Confirm/CANCEL Appointments (with reason), Edit Profile, Manage Schedule |
+| **Admin** | Full access: CRUD on Users, Doctors, Specialties, Appointments, Reports, Audit Logs |
+---
+
+## 📁 **Project Structure**
+
+```bash
+smart_health_center/
+├── src/
+│   ├── app.js                    # Server entry point
+│   ├── config/                   # DB, env, server settings
+│   ├── controllers/              # Route handlers
+│   ├── middlewares/              # Auth, logging, error handling
+│   ├── models/                   # Mongoose schemas
+│   ├── services/                 # Business logic
+│   ├── routes/                   # API route definitions
+│   ├── utils/                    # Helper functions
+│   └── validations/              # Input validation (Joi/Zod)
+├── uploads/                      # User-uploaded files
+├── templates/                    # Plop.js scaffolding
+├── package.json
+├── .env
+└── README.md
+```
+
+---
+
+## 📦 **Libraries Used**
+
+| Library | Purpose |
+|-------|--------|
+| `express` | Web framework |
+| `mongoose` | MongoDB ODM |
+| `jsonwebtoken` | JWT authentication |
+| `argonaut2` | Secure password hashing |
+| `express-validator` | Input validation |
+| `helmet` | Security headers |
+| `cors` | Cross-origin requests |
+| `xss-clean` | XSS protection |
+| `nodemon` | Auto-restart dev server |
+| `plop` | Code generation |
+| `exceljs` | Export to Excel |
+| `pdfkit` | Generate PDF reports |
+| `dayjs` | Date handling |
+| `socket.io` | Real-time notifications |
+
+---
+
+## 🧪 **Testing & Security**
+
+- ✅ **Input Validation**: All fields validated with `express-validator`
+- ✅ **XSS Prevention**: `xss-clean` middleware
+- ✅ **NoSQL Injection**: Sanitized queries
+- ✅ **Centralized Error Handling**: Clear, consistent responses
+- ✅ **Audit Logging**: All key actions logged
+- ✅ **Rate Limiting**: Protect against brute-force attacks
+
+---
+
+## 🔄 **Future Enhancements**
+
+1. **Email Notifications** (SendGrid/Nodemailer)
+2. **Real-Time Updates** (Socket.io)
+3. **Mobile App Integration**
+4. **Multi-Language Support**
+5. **AI-Powered Recommendations**
+
+---
+
+## 📝 **How to Run Locally**
+
+```bash
+git clone https://github.com/yourusername/smart_health_center.git
+cd smart_health_center
+npm install
+cp .env.example .env
+npm run dev
+```
+
+> ✅ Ensure MongoDB is running.
+
+---
+
+## 🤝 **Contributing**
+
+Open to PRs! Please follow the code style and documentation standards.
+
+---
+
+## 📄 **License**
+
+MIT License
+
+---
+
+✅ **This project is ready for production with a solid foundation**.  
+Let me know if you want a **Postman Collection**, **Swagger Docs**, or **Docker Setup**!
+
+Happy coding! 💻
+
 ## Project Structure
 ```bash
 smart_health_center-appointments/
