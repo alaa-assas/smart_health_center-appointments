@@ -1,3 +1,117 @@
+
+## ✅ **DataBase Models**
+
+### 1. **Specialty Schema**
+
+- `name`: String, required, unique  
+- `description`: String, optinal  
+- `timestamps (createdAt, updatedAt)`: Date  
+
+---
+
+### 2. **Doctor Schema**
+
+- `userId`: ObjectId, reference to `User`  
+- `specialtyId`: ObjectId, reference to `Specialty`  
+- `bio`: String  
+- `avgRating`: Number, default: 0, It is calculated from reviews. 
+- `yearsOfExperience`: Number, default: 0
+- `certifications`: [String]
+- `graduationYear`: Number
+- `medicalSchool`: String
+- `timestamps (createdAt, updatedAt)`: Date   
+
+---
+
+### 3. **Patient Schema**
+
+- `userId`: ObjectId, reference to `User`  
+- `gender`: String (enum: "male", "female", "other")  
+- `chronicConditions`: [String]  
+- `isActive`: Boolean, default: true  
+- `timestamps (createdAt, updatedAt)`: Date  
+
+---
+
+### 4. **Appointment Schema**
+
+- `patientId`: ObjectId, reference to `Patient`  
+- `doctorId`: ObjectId, reference to `Doctor`  
+- `date`: Date  
+- `slot`: { start: String, end: String }  
+- `status`: String (enum: "Pending", "Confirmed", "Completed", "Cancelled"), default: "Pending"  
+- `cancelReason`: String  
+- `canceldeBy`: ObjectId, reference to `User`  
+- `timestamps (createdAt, updatedAt)`: Date  
+
+---
+
+### 5. **Review Schema**
+
+- `appointmentId`: ObjectId, reference to `Appointment`  
+- `stars`: Number, min: 1, max: 5  
+- `comment`: String, optinal  
+- `timestamps (createdAt, updatedAt)`: Date 
+
+---
+
+### 6. **DoctorSchedule Schema**
+
+- `doctorId`: ObjectId, reference to `Doctor`, unique  
+- `workDays`: [Number] (0 = Sunday, 6 = Saturday)  
+- `slots`: [{ start: String, end: String }]  
+- `vacations`: [{ from: Date, to: Date }]  
+- `timestamps (createdAt, updatedAt)`: Date   
+
+---
+
+### 7. **User Schema**
+
+- `email`: String, required, unique, lowercase  
+- `passwordHash`: String, required  
+- `fullName`: String  
+- `phone`: String  
+- `dateOfBirth`: Date  
+- `address`: String  
+- `role`: String (enum: "patient", "doctor", "admin"), required  
+- `isActive`: Boolean, default: true  
+- `timestamps (createdAt, updatedAt)`: Date  
+
+---
+
+### 8. **Notification Schema**
+
+- `userId`: ObjectId, reference to `User`  
+- `message`: String  
+- `type`: String (enum: BOOKED_APPOINTMENT", "CONFIRMED", "CANCELLED"), required  
+- `isRead`: Boolean, default: false  
+- `timestamps (createdAt, updatedAt)`: Date 
+ 
+
+---
+
+### 9. **AuditLog Schema**
+
+- `userId`: ObjectId, reference to `User`  
+- `action`: String (e.g., "BOOKED_APPOINTMENT", "CONFIRMED", "CANCELLED")  
+- `entity`: String (e.g., "Appointment", "Doctor")  
+- `entityId`: ObjectId  
+- `timestamps (createdAt, updatedAt)`: Date 
+
+---
+
+## 🔗 **العلاقات بين الجداول**
+
+| جدول | رابط | الوصف |
+|------|------|-------|
+| `Patient` | `userId` → `User._id` | كل مريض له حساب مستخدم |
+| `Doctor` | `userId` → `User._id` | كل طبيب له حساب مستخدم |
+| `Doctor` | `specialtyId` → `Specialty._id` | الطبيب ينتمي إلى تخصص واحد |
+| `Appointment` | `patientId` → `Patient._id` | الموعد يخص مريضًا معينًا |
+| `Appointment` | `doctorId` → `Doctor._id` | الموعد يخص طبيبًا معينًا |
+| `Review` | `appointmentId` → `Appointment._id` | المراجعة مرتبطة بموعد معين |
+| `DoctorSchedule` | `doctorId` → `Doctor._id` | كل طبيب له جدول زمني واحد |
+
 ## API EndPoint
 
 > `HTTP Method /endpoint | Description | Auth | Role`
