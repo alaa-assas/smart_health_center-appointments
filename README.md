@@ -100,17 +100,19 @@
 
 ---
 
-## 🔗 **العلاقات بين الجداول**
+## 🔗 **Relationships Between Tables**
 
-| جدول | رابط | الوصف |
-|------|------|-------|
-| `Patient` | `userId` → `User._id` | كل مريض له حساب مستخدم |
-| `Doctor` | `userId` → `User._id` | كل طبيب له حساب مستخدم |
-| `Doctor` | `specialtyId` → `Specialty._id` | الطبيب ينتمي إلى تخصص واحد |
-| `Appointment` | `patientId` → `Patient._id` | الموعد يخص مريضًا معينًا |
-| `Appointment` | `doctorId` → `Doctor._id` | الموعد يخص طبيبًا معينًا |
-| `Review` | `appointmentId` → `Appointment._id` | المراجعة مرتبطة بموعد معين |
-| `DoctorSchedule` | `doctorId` → `Doctor._id` | كل طبيب له جدول زمني واحد |
+| Table | Link | Description |
+|------|------|-------------|
+| `Patient` | `userId` → `User._id` | Each patient has a user account |
+| `Doctor` | `userId` → `User._id` | Each doctor has a user account |
+| `Doctor` | `specialtyId` → `Specialty._id` | Doctor belongs to one specialty |
+| `Appointment` | `patientId` → `Patient._id` | Appointment belongs to a specific patient |
+| `Appointment` | `doctorId` → `Doctor._id` | Appointment belongs to a specific doctor |
+| `Review` | `appointmentId` → `Appointment._id` | Review is linked to a specific appointment |
+| `DoctorSchedule` | `doctorId` → `Doctor._id` | Each doctor has one schedule |
+
+---
 
 ## API EndPoint
 
