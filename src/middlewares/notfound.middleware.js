@@ -1,6 +1,9 @@
-const notFound = (req, res) => res.status(404).json({
-    success: false,
-    message: "Not Found"
-})
+const collection = require("../utils/collection");
 
-module.exports = notFound
+const notFound = (req, res) => {
+  return res.status(404).json(
+    collection(false, "Route not found", null, "NOT_FOUND")
+  );
+};
+
+module.exports = notFound;

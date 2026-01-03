@@ -1,14 +1,13 @@
+const collection = require("../utils/collection");
 const Specialty = require("../models/Specialty");
 
 class SpecialtyController {
   async getAll(req, res, next) {
     try {
-      const specialties = await Specialty.find().sort({ createdAt: -1 });
-      res.status(200).json({
-        success: true,
-        count: specialties.length,
-        data: specialties,
-      });
+      const data = await Specialty.find().sort({ createdAt: -1 });
+      return res.status(200).json(
+        collection(true, "Specialties retrieved successfully", data, "SUCCESS")
+      );
     } catch (error) {
       next(error);
     }
@@ -17,15 +16,15 @@ class SpecialtyController {
   async getById(req, res, next) {
     try {
       const { id } = req.params;
-      const specialty = await Specialty.findById(id);
-
-      if (!specialty) {
+      const data = await Specialty.findById(id);
+      if (!data) {
         const error = new Error("Specialty not found");
         error.statusCode = 404;
         return next(error);
       }
-
-      res.status(200).json({ success: true,  specialty });
+      return res.status(200).json(
+        collection(true, "Specialty retrieved successfully", data, "SUCCESS")
+      );
     } catch (error) {
       next(error);
     }
@@ -33,15 +32,11 @@ class SpecialtyController {
 
   async create(req, res, next) {
     try {
-      const { name, description } = req.body;
-      const specialty = new Specialty({ name, description });
-      await specialty.save();
-
-      res.status(201).json({
-        success: true,
-        message: "Specialty created successfully",
-        data: specialty,
-      });
+      const data = new Specialty(req.body);
+      await data.save();
+      return res.status(201).json(
+        collection(true, "Specialty created successfully", data, "CREATED")
+      );
     } catch (error) {
       next(error);
     }
@@ -50,29 +45,19 @@ class SpecialtyController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const { name, description } = req.body;
-
-      const specialty = await Specialty.findByIdAndUpdate(
+      const data = await Specialty.findByIdAndUpdate(
         id,
-        { name, description },
-        {
-          new: true,
-          runValidators: true,
-          context: "query",
-        }
+        req.body,
+        { new: true, runValidators: true }
       );
-
-      if (!specialty) {
+      if (!data) {
         const error = new Error("Specialty not found");
         error.statusCode = 404;
         return next(error);
       }
-
-      res.status(200).json({
-        success: true,
-        message: "Specialty updated successfully",
-         specialty,
-      });
+      return res.status(200).json(
+        collection(true, "Specialty updated successfully", data, "UPDATED")
+      );
     } catch (error) {
       next(error);
     }
@@ -81,18 +66,15 @@ class SpecialtyController {
   async delete(req, res, next) {
     try {
       const { id } = req.params;
-      const specialty = await Specialty.findByIdAndDelete(id);
-
-      if (!specialty) {
+      const data = await Specialty.findByIdAndDelete(id);
+      if (!data) {
         const error = new Error("Specialty not found");
         error.statusCode = 404;
         return next(error);
       }
-
-      res.status(200).json({
-        success: true,
-        message: "Specialty deleted successfully",
-      });
+      return res.status(200).json(
+        collection(true, "Specialty deleted successfully", null, "DELETED")
+      );
     } catch (error) {
       next(error);
     }
