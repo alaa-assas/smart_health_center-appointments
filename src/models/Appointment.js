@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient", required: true },
@@ -13,4 +13,4 @@ const appointmentSchema = new mongoose.Schema({
   cancelReason: String
 }, { timestamps: true });
 
-export default mongoose.model("Appointment", appointmentSchema);
+module.exports = mongoose.model("Appointment", appointmentSchema);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const patientSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -6,4 +6,4 @@ const patientSchema = new mongoose.Schema({
   phone: String
 }, { timestamps: true });
 
-export default mongoose.model("Patient", patientSchema);
+module.exports = mongoose.model("Patient", patientSchema);

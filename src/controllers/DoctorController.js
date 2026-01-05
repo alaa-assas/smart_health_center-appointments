@@ -40,4 +40,4 @@ class DoctorController {
     }
 }
 
-module.exports = DoctorController;
+module.exports = new DoctorController();

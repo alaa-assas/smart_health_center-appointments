@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const specialtySchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   description: String
 }, { timestamps: true });
 
-export default mongoose.model("Specialty", specialtySchema);
+module.exports = mongoose.model("Specialty", specialtySchema);

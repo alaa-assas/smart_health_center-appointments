@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const slotSchema = new mongoose.Schema({
   start: String,
@@ -17,4 +17,4 @@ const doctorScheduleSchema = new mongoose.Schema({
   vacations: [vacationSchema]
 }, { timestamps: true });
 
-export default mongoose.model("DoctorSchedule", doctorScheduleSchema);
+module.exports = mongoose.model("DoctorSchedule", doctorScheduleSchema);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema({
   appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Appointment", required: true },
@@ -8,4 +8,4 @@ const reviewSchema = new mongoose.Schema({
   comment: String
 }, { timestamps: true });
 
-export default mongoose.model("Review", reviewSchema);
+module.exports = mongoose.model("Review", reviewSchema);
