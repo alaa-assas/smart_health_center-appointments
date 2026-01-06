@@ -1,14 +1,12 @@
 const mongoose = require("mongoose");
 
-const doctorSchema = new mongoose.Schema(
-    {
-    // Add your fields here
-    },
-    {
-    timestamps: true,
-    }
-);
+const doctorSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  fullName: String,
+  specialtyId: { type: mongoose.Schema.Types.ObjectId, ref: "Specialty" },
+  location: String,
+  bio: String,
+  avgRating: { type: Number, default: 0 }
+}, { timestamps: true });
 
-const Doctor = mongoose.model("Doctor", doctorSchema);
-
-module.exports = Doctor;
+module.exports = mongoose.model("Doctor", doctorSchema);
