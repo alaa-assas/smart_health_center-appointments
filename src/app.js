@@ -1,34 +1,31 @@
 require("dotenv").config();
 
 const express = require("express");
-const morgan = require("morgan");
 const app = express();
 
 const mongoose = require("mongoose");
+const cookies = require("cookie-parser");
+const { apiLimiter } = require("./middlewares/limiter.middleware");
 
-// use Morgan
-app.use(morgan("dev"));
+const helmet = require("helmet");
+const xssSanitize = require("./middlewares/xss.middleware");
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// use the Cookies
-const cookies = require("cookie-parser");
 app.use(cookies());
-
 // protect from xss
-const xssSanitize = require("./middlewares/xss.middleware");
 app.use(xssSanitize);
 
-// use helmet for Enhanced security headers specifically for auth
-const helmet = require("helmet");
+// Enhanced security headers specifically for auth
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        /* styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], */
         scriptSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
+        /* connectSrc: ["'self'", "https://api.yourdomain.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"], */
         frameAncestors: ["'none'"], // Prevent clickjacking
         formAction: ["'self'"], // Restrict form submissions
       },
@@ -43,19 +40,18 @@ app.use(
   })
 );
 
-// use the CORS
-const cors = require("cors");
-app.use(
-  cors({
-    origin: ["http://localhost:5167"],
-  })
-);
-
-// Rate Limiter import from middleware limiter
-const { apiLimiter } = require("./middlewares/limiter.middleware");
+// Rate Limiter
 app.use(apiLimiter);
 
-app.use("/api/v1/doctor", require("./routes/doctor.routes"));
+/** start routes **/
+app.use("/api/v1/doctors", require("./routes/doctor.routes"));
+/** end routes **/
+
+// Error Middleware
+app.use(require("./middlewares/error.middleware"));
+
+// Not Found
+app.use(require("./middlewares/notfound.middleware"));
 
 const PORT = process.env.PORT;
 const MONGO_URL = process.env.MONGO_URL;
