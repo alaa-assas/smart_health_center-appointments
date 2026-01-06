@@ -100,6 +100,9 @@ userSchema.set('toJSON', {
     virtuals: true,
     transform: function (doc, ret) {
         delete ret.passwordHash;
+        delete ret.isLocked;
+        delete ret.lockedUntil;
+        delete ret.failedLoginAttempts;
         delete ret.__v;
         return ret;
     }

@@ -39,4 +39,12 @@ router.get("/profile",
     asyncHandler(authController.getPorfile)
 );
 
+router.put("/profile",
+    [requireAuth],
+    asyncHandler(authController.updateProfile)
+);
+
+
+
+
 module.exports = router;

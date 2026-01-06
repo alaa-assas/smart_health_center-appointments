@@ -1,9 +1,9 @@
 const collection = require("../utils/collection");
 const User = require("../models/User");
+const Doctor = require("../models/Doctor");
 const passwordService = require('../utils/passwordService');
 const cookieService = require('../utils/cookieService');
 const tokenService = require('../utils/tokenService');
-
 
 
 class AuthController {
@@ -190,26 +190,128 @@ class AuthController {
 
         const id = req.user.id;
 
-        const user = await User.findById(id)
+        let user = await User.findById(id)
 
-        if(user.role === "doctor"){
-            user.populate("Specialty")
-                .populate({
-                    path: 'doctor',
-                    populate: {
-                        path: 'Specialty',
-                    }
-                })
-                .populate({
-                    path: 'doctor',
-                    populate: {
-                        path: 'DoctorSchedule',
-                    }
-                });
+        if (user.role === "doctor") {
+            user.populate({
+                path: 'doctor',
+                populate: [
+                    {path: 'specialtyId'},
+                    {path: 'doctorSchedule'}
+                ]
+            });
         }
 
         return res.status(200).json(collection(true, 'Get Profile Data', user, "SUCCESS"));
     }
+
+    async updateProfile(req, res) {
+        const userId = req.user.id;
+        const updateData = req.body;
+
+        const allowedUserFields = [
+            'fullName', 'phone', 'dateOfBirth', 'address'
+        ];
+
+        let userUpdates = {};
+        allowedUserFields.forEach(field => {
+            if (updateData[field] !== undefined) {
+                userUpdates[field] = updateData[field];
+            }
+        });
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {$set: userUpdates},
+            {new: true, runValidators: true}
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json(collection(false, 'User not found', null, "NOT_FOUND"));
+        }
+        let responseData = {user: updatedUser};
+
+        if (updatedUser.role === 'doctor') {
+
+            const doctorUpdateResult = await this.updateDoctorProfile(userId, updateData);
+            responseData.doctor = doctorUpdateResult.doctor;
+
+            // إذا كان هناك تحديث للجدول الزمني
+            if (updateData.schedule && Object.keys(updateData.schedule).length > 0) {
+                responseData.schedule = await this.updateDoctorSchedule(
+                    doctorUpdateResult.doctor._id,
+                    updateData.schedule
+                );
+            }
+        }
+        return res.status(200).json(
+            collection(true, 'Profile updated successfully', responseData, "SUCCESS")
+        );
+    }
+
+
+    async updateDoctorProfile(userId, updateData) {
+        try {
+
+            let doctor = await Doctor.findOne({userId: userId});
+
+            const allowedDoctorFields = [
+                'fullName', 'specialtyId', 'location', 'bio'
+            ];
+
+            let doctorUpdates = {};
+            allowedDoctorFields.forEach(field => {
+                if (updateData[field] !== undefined) {
+                    doctorUpdates[field] = updateData[field];
+                }
+            });
+
+            doctor = await Doctor.findByIdAndUpdate(
+                doctor._id,
+                {$set: doctorUpdates},
+                {new: true, runValidators: true}
+            ).populate('specialtyId', 'name description');
+
+
+            return {doctor};
+
+        } catch (error) {
+            console.error('Update Doctor Profile Error:', error);
+            throw error;
+        }
+    }
+
+    async updateDoctorSchedule(doctorId, scheduleData) {
+        try {
+
+            let doctor = await Doctor.findById(doctorId).populate('doctorSchedule');
+
+            let schedule;
+
+            // إذا كان هناك جدول موجود، قم بتحديثه
+            if (doctor.doctorSchedule) {
+                schedule = await DoctorSchedule.findByIdAndUpdate(
+                    doctor.doctorSchedule._id,
+                    {$set: scheduleData},
+                    {new: true, runValidators: true}
+                );
+            } else {
+                scheduleData.doctorId = doctorId;
+                schedule = await DoctorSchedule.create(scheduleData);
+
+                await Doctor.findByIdAndUpdate(doctorId, {
+                    $set: {doctorSchedule: schedule._id}
+                });
+            }
+
+            return schedule;
+
+        } catch (error) {
+            console.error('Update Doctor Schedule Error:', error);
+            throw error;
+        }
+    }
 }
+
 
 module.exports = new AuthController();
