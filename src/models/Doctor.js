@@ -6,7 +6,9 @@ const doctorSchema = new mongoose.Schema({
   specialtyId: { type: mongoose.Schema.Types.ObjectId, ref: "Specialty" },
   location: String,
   bio: String,
-  avgRating: { type: Number, default: 0 }
+  avgRating: { type: Number, default: 0 },
+  doctorSchedule: { type: mongoose.Schema.Types.ObjectId, ref: "DoctorSchedule"}
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("Doctor", doctorSchema);
