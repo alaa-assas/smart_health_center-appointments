@@ -44,6 +44,8 @@ app.use(apiLimiter);
 
 /** start routes **/
 app.use("/api/v1/doctor", require("./routes/doctor.routes"))
+
+app.use("/api/v1/auth",require("./routes/auth.routes"))
 /** end routes **/
 
 // Error Middleware
