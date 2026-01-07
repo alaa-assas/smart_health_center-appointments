@@ -49,6 +49,9 @@ app.use("/api/v1/doctor", require("./routes/doctor.routes"));
 app.use("/api/v1/review", require("./routes/review.routes"));
 app.use("/api/v1/specialty", require("./routes/specialty.routes"));
 
+     //patients
+app.use("/api/v1/patients", require("./routes/patient.routes"));
+
 /** end routes **/
 
 // Error Middleware
