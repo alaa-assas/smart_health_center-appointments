@@ -44,7 +44,11 @@ app.use(
 app.use(apiLimiter);
 
 /** start routes **/
-app.use("/api/v1/doctors", require("./routes/doctor.routes"));
+app.use("/api/v1/auth", require("./routes/auth.routes"));
+app.use("/api/v1/doctor", require("./routes/doctor.routes"));
+app.use("/api/v1/review", require("./routes/review.routes"));
+app.use("/api/v1/specialty", require("./routes/specialty.routes"));
+
 /** end routes **/
 
 // Error Middleware

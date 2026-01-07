@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const validate = require('../middlewares/validate.middleware');
 
-const specialtyValidation = require("../validations/specialtyValidation");
+const specialtyValidation = require("../validations/specialty.validation");
 
 const specialtyController = require("../controllers/SpecialtyController");
 

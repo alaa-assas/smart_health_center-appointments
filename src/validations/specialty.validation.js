@@ -49,7 +49,7 @@ const specialtyValidation = {
     param("id")
       .custom((value) => mongoose.Types.ObjectId.isValid(value))
       .withMessage("Invalid ID format"),
-  ],
+  ]
 };
 
 module.exports = specialtyValidation;

@@ -81,4 +81,4 @@ class SpecialtyController {
   }
 }
 
-module.exports = SpecialtyController;
+module.exports = new SpecialtyController();
