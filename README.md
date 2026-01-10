@@ -151,7 +151,9 @@ POST /api/v1/doctors | Admin adds a doctor + their schedule | Yes | Admin
 PUT /api/v1/doctors/:id | Update doctor info & schedule | Yes | Admin
 GET /api/v1/doctors | Get all doctors with search/filter options (name, specialty, location) | No | None
 GET /api/v1/doctors/:id | Get doctor details + specialty, schedule, reviews | No | None
+GET /api/v1/doctors/:id/schedule  | Get doctor schedule | NO | None
 DELETE /api/v1/doctors/:id | Remove doctor + delete their schedule | Yes | Admin
+POST /api/v1/doctors/:id/restore  | restore the doctor after soft delete | Yes | Admin
 ```
 
 ---
