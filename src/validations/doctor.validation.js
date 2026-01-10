@@ -3,12 +3,41 @@ const mongoose = require("mongoose");
 
 const doctorValidation = {
   create: [
-    body("userId")
+    // user data
+    body("email")
       .notEmpty()
-      .withMessage("User ID is required")
-      .custom((value) => mongoose.Types.ObjectId.isValid(value))
-      .withMessage("Invalid User ID format"),
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Invalid email format")
+      .normalizeEmail(),
 
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters"),
+
+    body("fullName")
+      .notEmpty()
+      .withMessage("Full name is required")
+      .trim()
+      .isLength({ min: 2, max: 50 })
+      .withMessage("Full name must be between 2 and 50 characters"),
+
+    body("phone")
+      .optional({ nullable: true })
+      .trim()
+      .matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/)
+      .withMessage("Invalid phone number"),
+
+    body("dateOfBirth")
+      .optional({ nullable: true })
+      .isISO8601()
+      .withMessage("Invalid date format"),
+
+    body("address").optional({ nullable: true }).trim(),
+
+    //  doctor data
     body("specialtyId")
       .notEmpty()
       .withMessage("Specialty ID is required")
@@ -42,7 +71,7 @@ const doctorValidation = {
       .isLength({ max: 200 })
       .withMessage("Medical school name must not exceed 200 characters"),
 
-    // Schedule validation (بسيطة)
+    // Schedule validation
     body("schedule.workDays")
       .optional({ nullable: true })
       .isArray()

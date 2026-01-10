@@ -1,6 +1,8 @@
 const collection = require("../utils/collection");
 const Doctor = require("../models/Doctor");
 const DoctorSchedule = require("../models/DoctorSchedule");
+const User = require("../models/User");
+const passwordService = require("../utils/passwordService");
 
 class DoctorController {
   async getAll(req, res, next) {
@@ -116,10 +118,84 @@ class DoctorController {
 
   async create(req, res, next) {
     try {
-      const { schedule, ...doctorData } = req.body;
+      const { schedule, ...allData } = req.body;
 
-      const doctor = new Doctor(doctorData);
+      // division the data
+      const userData = {
+        email: allData.email,
+        password: allData.password,
+        fullName: allData.fullName,
+        phone: allData.phone,
+        dateOfBirth: allData.dateOfBirth,
+        address: allData.address,
+      };
+
+      const doctorData = {
+        specialtyId: allData.specialtyId,
+        bio: allData.bio,
+        yearsOfExperience: allData.yearsOfExperience,
+        certifications: allData.certifications,
+        graduationYear: allData.graduationYear,
+        medicalSchool: allData.medicalSchool,
+      };
+
+      if (!userData.email || !userData.password || !userData.fullName) {
+        const error = new Error("Email, password and fullName are required");
+        error.statusCode = 400;
+        return next(error);
+      }
+
+      const existingUser = await User.findOne({ email: userData.email });
+      if (existingUser) {
+        const error = new Error("Email already exists");
+        error.statusCode = 409;
+        return next(error);
+      }
+
+      if (!doctorData.specialtyId) {
+        const error = new Error("Specialty ID is required for doctor");
+        error.statusCode = 400;
+        return next(error);
+      }
+
+      try {
+        passwordService.validatePasswordStrength(userData.password);
+      } catch (error) {
+        error.statusCode = 400;
+        return next(error);
+      }
+
+      const hashedPassword = await passwordService.hashPassword(
+        userData.password
+      );
+
+      //  build the new user with role: 'doctor'
+      const user = await User.create({
+        email: userData.email,
+        passwordHash: hashedPassword,
+        fullName: userData.fullName,
+        phone: userData.phone,
+        dateOfBirth: userData.dateOfBirth,
+        address: userData.address,
+        role: "doctor",
+      });
+
+      // build doctior
+      const doctor = new Doctor({
+        userId: user._id,
+        specialtyId: doctorData.specialtyId,
+        bio: doctorData.bio || "",
+        avgRating: 0,
+        yearsOfExperience: doctorData.yearsOfExperience || 0,
+        certifications: doctorData.certifications || [],
+        graduationYear: doctorData.graduationYear,
+        medicalSchool: doctorData.medicalSchool || "",
+      });
       await doctor.save();
+
+      // conect the doctor with user
+      user.doctor = doctor._id;
+      await user.save();
 
       let doctorSchedule = null;
       if (schedule) {
@@ -129,15 +205,22 @@ class DoctorController {
         });
         await doctorSchedule.save();
       }
-
       const populatedDoctor = await Doctor.findById(doctor._id)
-        .populate("specialtyId", "name")
+        .populate("specialtyId", "name description")
         .populate({
           path: "userId",
-          select: "fullName email",
+          select: "fullName email phone",
         });
 
       const response = {
+        user: {
+          _id: user._id,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role,
+          phone: user.phone,
+          doctor: doctor._id,
+        },
         doctor: populatedDoctor,
         schedule: doctorSchedule,
       };
@@ -145,9 +228,25 @@ class DoctorController {
       return res
         .status(201)
         .json(
-          collection(true, "Doctor created successfully", response, "CREATED")
+          collection(
+            true,
+            "Doctor user created successfully",
+            response,
+            "CREATED"
+          )
         );
     } catch (error) {
+      // if something wrong
+      if (error.user && error.user._id) {
+        await User.findByIdAndDelete(error.user._id);
+      }
+      if (error.doctor && error.doctor._id) {
+        await Doctor.findByIdAndDelete(error.doctor._id);
+      }
+      if (error.doctorSchedule && error.doctorSchedule._id) {
+        await DoctorSchedule.findByIdAndDelete(error.doctorSchedule._id);
+      }
+
       if (error.code === 11000) {
         const duplicateError = new Error("User already has a doctor profile");
         duplicateError.statusCode = 409;
@@ -244,7 +343,7 @@ class DoctorController {
       next(error);
     }
   }
-  // function for restore the deleted doctor
+
   async restore(req, res, next) {
     try {
       const { id } = req.params;
@@ -277,12 +376,10 @@ class DoctorController {
     }
   }
 
-  // function for get schedule belong to a doctor
   async getSchedule(req, res, next) {
     try {
       const { id } = req.params;
 
-      // cheack if doctor is active
       const doctor = await Doctor.findOne({ _id: id, isActive: true });
       if (!doctor) {
         const error = new Error("Doctor not found or is inactive");
