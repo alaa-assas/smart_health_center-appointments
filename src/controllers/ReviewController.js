@@ -1,194 +1,197 @@
 const Review = require("../models/Review");
 const Appointment = require("../models/Appointment");
+const collection = require("../utils/collection");
+const cookieService = require("../utils/cookieService"); 
+const tokenService = require("../utils/tokenService");   
+
+// Helper to get verified user ID from access token in cookie
+const getUserIdFromAccessToken = (req) => {
+    const accessToken = cookieService.getAccessToken(req);
+    if (!accessToken) {
+        throw new Error("No access token found");
+    }
+    const decoded = tokenService.verifyAccessToken(accessToken);
+    return decoded.id; 
+};
 
 class ReviewController {
-  // POST /api/v1/reviews — Patient adds a review for a completed appointment
-  async create(req, res) {
-    try {
-      const { appointmentId, stars, comment } = req.body;
-      const patientId = req.user.id;
+    async create(req, res, next) {
+        try {
+            const { appointmentId, stars, comment } = req.body;
 
-      const appointment = await Appointment.findById(appointmentId);
-      if (!appointment || appointment.patient.toString() !== patientId) {
-        return res.status(404).json({
-          success: false,
-          message: "Appointment not found or not owned by patient",
-        });
-      }
+            // Get and verify user ID from access token in cookie
+            let patientId;
+            try {
+                patientId = getUserIdFromAccessToken(req);
+            } catch (err) {
+                return res.status(401).json(collection(false, err.message || "Unauthorized", null, "ERROR"));
+            }
 
-      if (appointment.status !== "completed") {
-        return res.status(400).json({
-          success: false,
-          message: "Can only review completed appointments",
-        });
-      }
+            const appointment = await Appointment.findById(appointmentId);
+            if (!appointment || appointment.patient.toString() !== patientId) {
+                return res.status(404).json(collection(false, "Appointment not found or not owned by patient", null, "ERROR"));
+            }
 
-      const existingReview = await Review.findOne({ appointmentId });
-      if (existingReview) {
-        return res.status(400).json({
-          success: false,
-          message: "Review already exists for this appointment",
-        });
-      }
+            if (appointment.status !== "completed") {
+                return res.status(400).json(collection(false, "Can only review completed appointments", null, "ERROR"));
+            }
 
-      const review = new Review({
-        appointmentId,
-        stars,
-        comment,
-      });
+            const existingReview = await Review.findOne({ appointmentId });
+            if (existingReview) {
+                return res.status(400).json(collection(false, "Review already exists for this appointment", null, "ERROR"));
+            }
 
-      await review.save();
-      return res.status(201).json({ success: true, data: review });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-        error: error.message,
-      });
+            const review = new Review({
+                appointmentId,
+                stars,
+                comment,
+            });
+
+            await review.save();
+            return res.status(201).json(collection(true, "Review created successfully", review, "SUCCESS"));
+        } catch (error) {
+            next(error);
+        }
     }
-  }
 
-  // PUT /api/v1/reviews/:id — Patient updates their review (stars & comment only)
-  async update(req, res) {
-    try {
-      const { id } = req.params;
-      const { stars, comment } = req.body;
-      const patientId = req.user.id;
+    async update(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { stars, comment } = req.body;
 
-      const review = await Review.findById(id).populate("appointmentId");
-      if (!review) {
-        return res.status(404).json({
-          success: false,
-          message: "Review not found",
-        });
-      }
+            let patientId;
+            try {
+                patientId = getUserIdFromAccessToken(req);
+            } catch (err) {
+                return res.status(401).json(collection(false, err.message || "Unauthorized", null, "ERROR"));
+            }
 
-      if (review.appointmentId?.patient?.toString() !== patientId) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized to update this review",
-        });
-      }
+            const review = await Review.findById(id).populate("appointmentId");
+            if (!review) {
+                return res.status(404).json(collection(false, "Review not found", null, "ERROR"));
+            }
 
-      review.stars = stars ?? review.stars;
-      review.comment = comment ?? review.comment;
+            if (review.appointmentId?.patient?.toString() !== patientId) {
+                return res.status(403).json(collection(false, "Not authorized to update this review", null, "ERROR"));
+            }
 
-      await review.save();
-      return res.json({ success: true, data: review });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-        error: error.message,
-      });
+            review.stars = stars ?? review.stars;
+            review.comment = comment ?? review.comment;
+
+            await review.save();
+            return res.json(collection(true, "Review updated successfully", review, "SUCCESS"));
+        } catch (error) {
+            next(error);
+        }
     }
-  }
 
-  // GET /api/v1/reviews — Get all reviews (filter by date) — Admin only
-  async getAll(req, res) {
-    try {
-      const { startDate, endDate } = req.query;
+    async getAll(req, res, next) {
+        try {
+            let userId, isAdmin = false;
+            try {
+                const decoded = tokenService.verifyAccessToken(cookieService.getAccessToken(req));
+                userId = decoded.id;
+                isAdmin = decoded.role === "admin"; 
+            } catch (err) {
+                return res.status(401).json(collection(false, "Admin access required", null, "ERROR"));
+            }
 
-      let filter = {};
-      if (startDate || endDate) {
-        filter.createdAt = {};
-        if (startDate) filter.createdAt.$gte = new Date(startDate);
-        if (endDate) filter.createdAt.$lte = new Date(endDate);
-      }
+            if (!isAdmin) {
+                return res.status(403).json(collection(false, "Forbidden: Admins only", null, "ERROR"));
+            }
 
-      const reviews = await Review.find(filter)
-        .populate("appointmentId", "patient doctor")
-        .populate("appointmentId.patient", "name email")
-        .populate("appointmentId.doctor", "name specialty")
-        .sort({ createdAt: -1 });
+            const { startDate, endDate } = req.query;
+            let filter = {};
+            if (startDate || endDate) {
+                filter.createdAt = {};
+                if (startDate) filter.createdAt.$gte = new Date(startDate);
+                if (endDate) filter.createdAt.$lte = new Date(endDate);
+            }
 
-      return res.json({ success: true, data: reviews });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-        error: error.message,
-      });
+            const reviews = await Review.find(filter)
+                .populate("appointmentId", "patient doctor")
+                .populate("appointmentId.patient", "name email")
+                .populate("appointmentId.doctor", "name specialty")
+                .sort({ createdAt: -1 });
+
+            return res.json(collection(true, "Reviews retrieved successfully", reviews, "SUCCESS"));
+        } catch (error) {
+            next(error);
+        }
     }
-  }
 
-  // GET /api/v1/reviews/:id — Get detailed review — Admin, Patient, Doctor
-  async getById(req, res) {
-    try {
-      const { id } = req.params;
-      const user = req.user;
+    async getById(req, res, next) {
+        try {
+            const { id } = req.params;
 
-      const review = await Review.findById(id).populate({
-        path: "appointmentId",
-        populate: [
-          { path: "patient", select: "name email" },
-          { path: "doctor", select: "name specialty" },
-        ],
-      });
+            let userId;
+            try {
+                userId = getUserIdFromAccessToken(req);
+            } catch (err) {
+                return res.status(401).json(collection(false, "Unauthorized", null, "ERROR"));
+            }
 
-      if (!review) {
-        return res.status(404).json({
-          success: false,
-          message: "Review not found",
-        });
-      }
+            const review = await Review.findById(id).populate({
+                path: "appointmentId",
+                populate: [
+                    { path: "patient", select: "name email" },
+                    { path: "doctor", select: "name specialty" },
+                ],
+            });
 
-      const appointment = review.appointmentId;
-      const isPatient = appointment.patient._id.toString() === user.id;
-      const isDoctor = appointment.doctor._id.toString() === user.id;
-      const isAdmin = user.role === "admin";
+            if (!review) {
+                return res.status(404).json(collection(false, "Review not found", null, "ERROR"));
+            }
 
-      if (!isAdmin && !isPatient && !isDoctor) {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied",
-        });
-      }
+            const appointment = review.appointmentId;
+            const isPatient = appointment.patient._id.toString() === userId;
+            const isDoctor = appointment.doctor._id.toString() === userId;
 
-      return res.json({ success: true, data: review });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-        error: error.message,
-      });
+            // Also check if user is admin (if role is in token)
+            let isAdmin = false;
+            try {
+                const decoded = tokenService.verifyAccessToken(cookieService.getAccessToken(req));
+                isAdmin = decoded.role === "admin";
+            } catch (e) {
+              
+            }
+
+            if (!isAdmin && !isPatient && !isDoctor) {
+                return res.status(403).json(collection(false, "Access denied", null, "ERROR"));
+            }
+
+            return res.json(collection(true, "Review retrieved successfully", review, "SUCCESS"));
+        } catch (error) {
+            next(error);
+        }
     }
-  }
 
-  // DELETE /api/v1/reviews/:id — Patient deletes their own review
-  async delete(req, res) {
-    try {
-      const { id } = req.params;
-      const patientId = req.user.id;
+    async delete(req, res, next) {
+        try {
+            const { id } = req.params;
 
-      const review = await Review.findById(id).populate("appointmentId");
-      if (!review) {
-        return res.status(404).json({
-          success: false,
-          message: "Review not found",
-        });
-      }
+            let patientId;
+            try {
+                patientId = getUserIdFromAccessToken(req);
+            } catch (err) {
+                return res.status(401).json(collection(false, "Unauthorized", null, "ERROR"));
+            }
 
-      if (review.appointmentId?.patient?.toString() !== patientId) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized to delete this review",
-        });
-      }
+            const review = await Review.findById(id).populate("appointmentId");
+            if (!review) {
+                return res.status(404).json(collection(false, "Review not found", null, "ERROR"));
+            }
 
-      await Review.findByIdAndDelete(id);
-      return res.json({
-        success: true,
-        message: "Review deleted successfully",
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-        error: error.message,
-      });
+            if (review.appointmentId?.patient?.toString() !== patientId) {
+                return res.status(403).json(collection(false, "Not authorized to delete this review", null, "ERROR"));
+            }
+
+            await Review.findByIdAndDelete(id);
+            return res.json(collection(true, "Review deleted successfully", null, "SUCCESS"));
+        } catch (error) {
+            next(error);
+        }
     }
-  }
 }
 
 module.exports = new ReviewController();
