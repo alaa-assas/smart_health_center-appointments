@@ -75,7 +75,6 @@ const userSchema = new mongoose.Schema({
 ;
 
 // Add an index to frequently searched fields
-userSchema.index({email: 1});
 userSchema.index({role: 1});
 userSchema.index({isActive: 1});
 
