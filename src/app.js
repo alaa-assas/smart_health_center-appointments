@@ -45,11 +45,11 @@ app.use(apiLimiter);
 
 /** start routes **/
 app.use("/api/v1/auth", require("./routes/auth.routes"));
-app.use("/api/v1/doctor", require("./routes/doctor.routes"));
+app.use("/api/v1/doctors", require("./routes/doctor.routes"));
 app.use("/api/v1/review", require("./routes/review.routes"));
 app.use("/api/v1/specialty", require("./routes/specialty.routes"));
 
-     //patients
+//patients
 app.use("/api/v1/patients", require("./routes/patient.routes"));
 
 /** end routes **/
@@ -67,6 +67,8 @@ mongoose
   .connect(MONGO_URL)
   .then((res) => {
     console.log("Connected to database done");
+    // Add this to make it work
+    require("./models/DoctorSchedule");
     app.listen(PORT, () => {
       console.log(`Server is running on: http://localhost:${PORT}`);
     });
