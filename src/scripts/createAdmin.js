@@ -10,9 +10,9 @@ const createAdminUser = async () => {
         const adminData = {
             email: process.env.ADMIN_EMAIL,
             fullName: process.env.ADMIN_NAME,
-            phone: "+963111111111",
-            dateOfBirth: new Date("1991-01-01"),
-            address: "Damascus, syria",
+            phone: process.env.ADMIN_PHONE,
+            dateOfBirth: new Date(process.env.ADMIN_DATE_OF_BIRTH),
+            address: process.env.ADMIN_ADDRESS,
             role: "admin"
         }
 

@@ -193,7 +193,8 @@ class AuthController {
         let user = await User.findById(id)
 
         if (user.role === "doctor") {
-            user.populate({
+
+            user = await User.findById(id).populate({
                 path: 'doctor',
                 populate: [
                     {path: 'specialtyId'},
@@ -210,7 +211,7 @@ class AuthController {
         const updateData = req.body;
 
         const allowedUserFields = [
-            'fullName', 'phone', 'dateOfBirth', 'address'
+            'email','fullName', 'phone', 'dateOfBirth', 'address'
         ];
 
         let userUpdates = {};
