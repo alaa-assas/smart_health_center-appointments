@@ -204,6 +204,9 @@ class DoctorController {
           ...schedule,
         });
         await doctorSchedule.save();
+
+        doctor.doctorSchedule = doctorSchedule._id;
+        await doctor.save();
       }
       const populatedDoctor = await Doctor.findById(doctor._id)
         .populate("specialtyId", "name description")

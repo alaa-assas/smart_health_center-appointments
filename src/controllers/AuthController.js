@@ -193,7 +193,8 @@ class AuthController {
         let user = await User.findById(id)
 
         if (user.role === "doctor") {
-            user.populate({
+
+            user = await User.findById(id).populate({
                 path: 'doctor',
                 populate: [
                     {path: 'specialtyId'},
