@@ -3,12 +3,41 @@ const mongoose = require("mongoose");
 
 const doctorValidation = {
   create: [
-    body("userId")
+    // user data
+    body("email")
       .notEmpty()
-      .withMessage("User ID is required")
-      .custom((value) => mongoose.Types.ObjectId.isValid(value))
-      .withMessage("Invalid User ID format"),
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Invalid email format")
+      .normalizeEmail(),
 
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters"),
+
+    body("fullName")
+      .notEmpty()
+      .withMessage("Full name is required")
+      .trim()
+      .isLength({ min: 2, max: 50 })
+      .withMessage("Full name must be between 2 and 50 characters"),
+
+    body("phone")
+      .optional({ nullable: true })
+      .trim()
+      .matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/)
+      .withMessage("Invalid phone number"),
+
+    body("dateOfBirth")
+      .optional({ nullable: true })
+      .isISO8601()
+      .withMessage("Invalid date format"),
+
+    body("address").optional({ nullable: true }).trim(),
+
+    //  doctor data
     body("specialtyId")
       .notEmpty()
       .withMessage("Specialty ID is required")
@@ -29,13 +58,7 @@ const doctorValidation = {
     body("certifications")
       .optional({ nullable: true })
       .isArray()
-      .withMessage("Certifications must be an array")
-      .custom((certs) => {
-        if (certs && certs.length > 10) {
-          throw new Error("Cannot have more than 10 certifications");
-        }
-        return true;
-      }),
+      .withMessage("Certifications must be an array"),
 
     body("graduationYear")
       .optional({ nullable: true })
@@ -47,6 +70,17 @@ const doctorValidation = {
       .trim()
       .isLength({ max: 200 })
       .withMessage("Medical school name must not exceed 200 characters"),
+
+    // Schedule validation
+    body("schedule.workDays")
+      .optional({ nullable: true })
+      .isArray()
+      .withMessage("Work days must be an array"),
+
+    body("schedule.slots")
+      .optional({ nullable: true })
+      .isArray()
+      .withMessage("Slots must be an array"),
   ],
 
   update: [
@@ -73,13 +107,7 @@ const doctorValidation = {
     body("certifications")
       .optional({ nullable: true })
       .isArray()
-      .withMessage("Certifications must be an array")
-      .custom((certs) => {
-        if (certs && certs.length > 10) {
-          throw new Error("Cannot have more than 10 certifications");
-        }
-        return true;
-      }),
+      .withMessage("Certifications must be an array"),
 
     body("graduationYear")
       .optional({ nullable: true })
@@ -91,6 +119,12 @@ const doctorValidation = {
       .trim()
       .isLength({ max: 200 })
       .withMessage("Medical school name must not exceed 200 characters"),
+
+    // Schedule validation
+    body("schedule")
+      .optional({ nullable: true })
+      .isObject()
+      .withMessage("Schedule must be an object"),
   ],
 
   getById: [

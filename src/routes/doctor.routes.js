@@ -4,12 +4,17 @@ const validate = require("../middlewares/validate.middleware");
 
 const doctorValidation = require("../validations/doctor.validation");
 const DoctorController = require("../controllers/DoctorController");
+const { auhtorize, requireAuth } = require("../middlewares/auth.middleware");
 
 /**
  * @POST /api/v1/doctors
  * Create a new doctor (Admin only)
  */
-router.post("/", [doctorValidation.create, validate], DoctorController.create);
+router.post(
+  "/",
+  [requireAuth, auhtorize("admin"), doctorValidation.create, validate],
+  DoctorController.create
+);
 
 /**
  * @PUT /api/v1/doctors/:id
@@ -17,7 +22,7 @@ router.post("/", [doctorValidation.create, validate], DoctorController.create);
  */
 router.put(
   "/:id",
-  [doctorValidation.update, validate],
+  [requireAuth, auhtorize("admin"), doctorValidation.update, validate],
   DoctorController.update
 );
 
@@ -33,12 +38,22 @@ router.get(
 
 /**
  * @DELETE /api/v1/doctors/:id
- * Remove doctor + delete their schedule (Admin only)
+ * Soft delete a doctor (set isActive to false)
  */
 router.delete(
   "/:id",
-  [doctorValidation.delete, validate],
+  [requireAuth, auhtorize("admin"), doctorValidation.delete, validate],
   DoctorController.delete
+);
+
+/**
+ * @POST /api/v1/doctors/:id/restore
+ * Restore a soft deleted doctor
+ */
+router.post(
+  "/:id/restore",
+  [requireAuth, auhtorize("admin"), doctorValidation.getById, validate],
+  DoctorController.restore
 );
 
 /**
@@ -46,5 +61,15 @@ router.delete(
  * Get all doctors with search/filter options
  */
 router.get("/", [doctorValidation.getAll, validate], DoctorController.getAll);
+
+/**
+ * @GET /api/v1/doctors/:id/schedule
+ * Get doctor's schedule
+ */
+router.get(
+  "/:id/schedule",
+  [doctorValidation.getById, validate],
+  DoctorController.getSchedule
+);
 
 module.exports = router;
