@@ -1,122 +1,121 @@
-
 ## ✅ **DataBase Models**
 
 ### 1. **Specialty Schema**
 
-- `name`: String, required, unique  
-- `description`: String, optinal  
-- `timestamps (createdAt, updatedAt)`: Date  
+- `name`: String, required, unique
+- `description`: String, optinal
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 2. **Doctor Schema**
 
-- `userId`: ObjectId, reference to `User`  
-- `specialtyId`: ObjectId, reference to `Specialty`  
-- `bio`: String  
-- `avgRating`: Number, default: 0, It is calculated from reviews. 
+- `userId`: ObjectId, reference to `User`
+- `specialtyId`: ObjectId, reference to `Specialty`
+- `bio`: String
+- `avgRating`: Number, default: 0, It is calculated from reviews.
 - `yearsOfExperience`: Number, default: 0
 - `certifications`: [String]
 - `graduationYear`: Number
 - `medicalSchool`: String
-- `timestamps (createdAt, updatedAt)`: Date   
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 3. **Patient Schema**
 
-- `userId`: ObjectId, reference to `User`  
-- `gender`: String (enum: "male", "female", "other")  
-- `chronicConditions`: [String]  
-- `isActive`: Boolean, default: true  
-- `timestamps (createdAt, updatedAt)`: Date  
+- `userId`: ObjectId, reference to `User`
+- `gender`: String (enum: "male", "female", "other")
+- `chronicConditions`: [String]
+- `isActive`: Boolean, default: true
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 4. **Appointment Schema**
 
-- `patientId`: ObjectId, reference to `Patient`  
-- `doctorId`: ObjectId, reference to `Doctor`  
-- `date`: Date  
-- `slot`: { start: String, end: String }  
-- `status`: String (enum: "Pending", "Confirmed", "Completed", "Cancelled"), default: "Pending"  
-- `cancelReason`: String  
-- `canceldeBy`: ObjectId, reference to `User`  
-- `timestamps (createdAt, updatedAt)`: Date  
+- `patientId`: ObjectId, reference to `Patient`
+- `doctorId`: ObjectId, reference to `Doctor`
+- `date`: Date
+- `slot`: { start: String, end: String }
+- `status`: String (enum: "Pending", "Confirmed", "Completed", "Cancelled"), default: "Pending"
+- `cancelReason`: String
+- `canceldeBy`: ObjectId, reference to `User`
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 5. **Review Schema**
 
-- `appointmentId`: ObjectId, reference to `Appointment`  
-- `stars`: Number, min: 1, max: 5  
-- `comment`: String, optinal  
-- `timestamps (createdAt, updatedAt)`: Date 
+- `appointmentId`: ObjectId, reference to `Appointment`
+- `stars`: Number, min: 1, max: 5
+- `comment`: String, optinal
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 6. **DoctorSchedule Schema**
 
-- `doctorId`: ObjectId, reference to `Doctor`, unique  
-- `workDays`: [Number] (0 = Sunday, 6 = Saturday)  
-- `slots`: [{ start: String, end: String }]  
-- `vacations`: [{ from: Date, to: Date }]  
-- `timestamps (createdAt, updatedAt)`: Date   
+- `doctorId`: ObjectId, reference to `Doctor`, unique
+- `workDays`: [Number] (0 = Sunday, 6 = Saturday)
+- `slots`: [{ start: String, end: String }]
+- `vacations`: [{ from: Date, to: Date }]
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 7. **User Schema**
 
-- `email`: String, required, unique, lowercase  
-- `passwordHash`: String, required  
-- `fullName`: String  
-- `phone`: String  
-- `dateOfBirth`: Date  
-- `address`: String  
-- `role`: String (enum: "patient", "doctor", "admin"), required  
-- `isActive`: Boolean, default: true  
-- `timestamps (createdAt, updatedAt)`: Date  
+- `email`: String, required, unique, lowercase
+- `passwordHash`: String, required
+- `fullName`: String
+- `phone`: String
+- `dateOfBirth`: Date
+- `address`: String
+- `role`: String (enum: "patient", "doctor", "admin"), required
+- `isActive`: Boolean, default: true
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 8. **Notification Schema**
 
-- `userId`: ObjectId, reference to `User`  
-- `message`: String  
-- `type`: String (enum: BOOKED_APPOINTMENT", "CONFIRMED", "CANCELLED"), required  
-- `isRead`: Boolean, default: false  
-- `timestamps (createdAt, updatedAt)`: Date 
- 
+- `userId`: ObjectId, reference to `User`
+- `message`: String
+- `type`: String (enum: BOOKED_APPOINTMENT", "CONFIRMED", "CANCELLED"), required
+- `isRead`: Boolean, default: false
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ### 9. **AuditLog Schema**
 
-- `userId`: ObjectId, reference to `User`  
-- `action`: String (e.g., "BOOKED_APPOINTMENT", "CONFIRMED", "CANCELLED")  
-- `entity`: String (e.g., "Appointment", "Doctor")  
-- `entityId`: ObjectId  
-- `timestamps (createdAt, updatedAt)`: Date 
+- `userId`: ObjectId, reference to `User`
+- `action`: String (e.g., "BOOKED_APPOINTMENT", "CONFIRMED", "CANCELLED")
+- `entity`: String (e.g., "Appointment", "Doctor")
+- `entityId`: ObjectId
+- `timestamps (createdAt, updatedAt)`: Date
 
 ---
 
 ## 🔗 **Relationships Between Tables**
 
-| Table | Link | Description |
-|------|------|-------------|
-| `Patient` | `userId` → `User._id` | Each patient has a user account |
-| `Doctor` | `userId` → `User._id` | Each doctor has a user account |
-| `Doctor` | `specialtyId` → `Specialty._id` | Doctor belongs to one specialty |
-| `Appointment` | `patientId` → `Patient._id` | Appointment belongs to a specific patient |
-| `Appointment` | `doctorId` → `Doctor._id` | Appointment belongs to a specific doctor |
-| `Review` | `appointmentId` → `Appointment._id` | Review is linked to a specific appointment |
-| `DoctorSchedule` | `doctorId` → `Doctor._id` | Each doctor has one schedule |
+| Table            | Link                                | Description                                |
+| ---------------- | ----------------------------------- | ------------------------------------------ |
+| `Patient`        | `userId` → `User._id`               | Each patient has a user account            |
+| `Doctor`         | `userId` → `User._id`               | Each doctor has a user account             |
+| `Doctor`         | `specialtyId` → `Specialty._id`     | Doctor belongs to one specialty            |
+| `Appointment`    | `patientId` → `Patient._id`         | Appointment belongs to a specific patient  |
+| `Appointment`    | `doctorId` → `Doctor._id`           | Appointment belongs to a specific doctor   |
+| `Review`         | `appointmentId` → `Appointment._id` | Review is linked to a specific appointment |
+| `DoctorSchedule` | `doctorId` → `Doctor._id`           | Each doctor has one schedule               |
 
 ---
 
 ## API EndPoint
 
 > `HTTP Method /endpoint | Description | Auth | Role`
+
 ---
 
 ### 📡 **Authentication & Users**
@@ -127,7 +126,7 @@ POST /api/v1/auth/login | Log in with email and password | No | None
 POST /api/v1/auth/logout | Log out the current user | Yes | None
 POST /api/v1/auth/refresh-token | Refresh JWT tokens | Yes | None
 GET /api/v1/auth/profile | View logged-in user profile (doctor includes specialty & schedule) | Yes | None
-PUT /api/v1/auth/profile | Update user profile (doctor can edit schedules) | Yes | None
+PUT /api/v1/auth/profile | Update user profile | Yes | None
 ```
 
 ---
@@ -194,14 +193,16 @@ GET /api/v1/reports/appointment-status | Report on booking confirmations/cancell
 
 ### 👥 **Roles & Permissions (RBAC)**
 
-| Role | Permissions |
-|------|-------------|
-| **Patient** | Register, Login, View Doctors, Book Appointments, Cancel Appointments, Rate Doctors |
-| **Doctor** | View Appointments, Confirm/CANCEL Appointments (with reason), Edit Profile, Manage Schedule |
-| **Admin** | Full access: CRUD on Users, Doctors, Specialties, Appointments, Reports, Audit Logs |
+| Role        | Permissions                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| **Patient** | Register, Login, View Doctors, Book Appointments, Cancel Appointments, Rate Doctors         |
+| **Doctor**  | View Appointments, Confirm/CANCEL Appointments (with reason), Edit Profile, Manage Schedule |
+| **Admin**   | Full access: CRUD on Users, Doctors, Specialties, Appointments, Reports, Audit Logs         |
+
 ---
 
 ## Project Structure
+
 ```bash
 smart_health_center-appointments/
 ├── node_modules/             # Installed npm dependencies (auto-generated; never commit)
@@ -218,7 +219,7 @@ smart_health_center-appointments/
 │   ├── sockets/                  # WebSocket/real-time communication handlers (if applicable)
 │   ├── test/                     # Unit and integration tests
 │   ├── utils/                    # Reusable helper functions and utilities
-│   └── validations/              # Input validation schemas (e.g., using Joi or Zod)                      
+│   └── validations/              # Input validation schemas (e.g., using Joi or Zod)
 ├── templates/                # Used to store template files generated by plop.js when scaffolding server-side
 ├── uploads/                  # Stores user-uploaded files (e.g., profile images, documents)
 ├── package.json              # Project metadata, dependencies, and npm scripts
@@ -226,31 +227,32 @@ smart_health_center-appointments/
 ├── plopfile.js               # Plop.js configuration for scaffolding files (e.g., controllers, models)
 ├── .env                      # Environment variables (e.g., DB credentials, API keys)
 ├── .gitignore                # Specifies files/folders Git should ignore (e.g., node_modules, .env)
-└── README.md                 # This documentation file 
+└── README.md                 # This documentation file
 ```
+
 ## 📦 **Libraries Used**
 
-| Library | Purpose |
-|-------|--------|
-| `express` | Web framework for Node.js to build APIs and web applications |
-| `mongoose` | ODM (Object Data Modeling) library for MongoDB and Node.js |
-| `jsonwebtoken` | Library for creating and verifying JSON Web Tokens (JWT) for authentication |
-| `argon2` | Password hashing library using the Argon2 algorithm for secure password storage |
-| `express-validator` | Set of middleware for validating and sanitizing user input data |
-| `helmet` | Security middleware that sets various HTTP headers to protect the app |
-| `cors` | Middleware to enable Cross-Origin Resource Sharing (CORS) for different domains |
-| `xss-clean` | Library to sanitize user input and prevent XSS (Cross-Site Scripting) attacks |
-| `nodemon` | Development tool that automatically restarts the server when code changes are detected |
-| `plop` | Code generator tool for automating file and component creation |
-| `exceljs` | Export reports to Excel (.xlsx) format |
-| `pdfkit` | Generate PDF reports |
-| `dayjs` | Lightweight date handling library for appointments, reports, and scheduling |
-| `socket.io` | Real-time, bidirectional communication between client and server (notifications, live updates) |
-| `dotenv` | Loads environment variables from a `.env` file into `process.env` |
-| `morgan` | HTTP request logger middleware for logging incoming requests |
-| `cookie-parser` | Middleware to parse cookies attached to the client request object |
-| `express-rate-limit` | Rate-limiting middleware to prevent brute-force attacks |
-| `nodemailer` | Module for sending emails from Node.js applications |
+| Library              | Purpose                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `express`            | Web framework for Node.js to build APIs and web applications                                   |
+| `mongoose`           | ODM (Object Data Modeling) library for MongoDB and Node.js                                     |
+| `jsonwebtoken`       | Library for creating and verifying JSON Web Tokens (JWT) for authentication                    |
+| `argon2`             | Password hashing library using the Argon2 algorithm for secure password storage                |
+| `express-validator`  | Set of middleware for validating and sanitizing user input data                                |
+| `helmet`             | Security middleware that sets various HTTP headers to protect the app                          |
+| `cors`               | Middleware to enable Cross-Origin Resource Sharing (CORS) for different domains                |
+| `xss-clean`          | Library to sanitize user input and prevent XSS (Cross-Site Scripting) attacks                  |
+| `nodemon`            | Development tool that automatically restarts the server when code changes are detected         |
+| `plop`               | Code generator tool for automating file and component creation                                 |
+| `exceljs`            | Export reports to Excel (.xlsx) format                                                         |
+| `pdfkit`             | Generate PDF reports                                                                           |
+| `dayjs`              | Lightweight date handling library for appointments, reports, and scheduling                    |
+| `socket.io`          | Real-time, bidirectional communication between client and server (notifications, live updates) |
+| `dotenv`             | Loads environment variables from a `.env` file into `process.env`                              |
+| `morgan`             | HTTP request logger middleware for logging incoming requests                                   |
+| `cookie-parser`      | Middleware to parse cookies attached to the client request object                              |
+| `express-rate-limit` | Rate-limiting middleware to prevent brute-force attacks                                        |
+| `nodemailer`         | Module for sending emails from Node.js applications                                            |
 
 ---
 
@@ -471,7 +473,6 @@ Improve user experience for active users.
 - Completed → No changes allowed
 - Cancelled → No changes allowed
 
-
 # Reporting & Analytics
 
 This document defines the reporting and analytics features available to system administrators.
@@ -479,6 +480,7 @@ This document defines the reporting and analytics features available to system a
 ---
 
 ## 1. Reporting Goals
+
 - Provide visibility into system usage.
 - Support administrative decision-making.
 - Enable filtering and exporting of appointment data.
@@ -488,15 +490,18 @@ This document defines the reporting and analytics features available to system a
 ## 2. Appointment Reports
 
 ### 2.1 Appointment List Report
+
 Allows the admin to view and filter appointments.
 
 #### Filters
+
 - Date range (from / to)
 - Doctor
 - Specialty
 - Appointment status
 
 #### Returned Data
+
 - Patient name
 - Doctor name
 - Specialty
@@ -510,6 +515,7 @@ Allows the admin to view and filter appointments.
 ### 2.2 API Endpoint: GET /api/admin/reports/appointments
 
 Query Parameters:
+
 - from
 - to
 - doctorId
@@ -521,6 +527,7 @@ Query Parameters:
 ## 3. Summary & Statistics Reports
 
 ### 3.1 Summary Metrics
+
 - Total appointments per status
 - Appointments per doctor
 - Appointments per specialty
@@ -530,6 +537,7 @@ Query Parameters:
 ### 3.2 API Endpoint: GET /api/admin/reports/summary
 
 ## 4. Data Aggregation Strategy
+
 - Use MongoDB aggregation pipelines:
   - $match for filters
   - $group for counts
@@ -545,15 +553,16 @@ Query Parameters:
 ## 5. Exporting Reports (Optional Advanced Feature)
 
 ### 5.1 Export Formats
+
 - Excel (.xlsx) using exceljs
-- PDF using *pdfkit* or *puppeteer*
+- PDF using _pdfkit_ or _puppeteer_
 
 ---
 
 ### 5.2 Export Endpoint: GET /api/admin/reports/export
 
-
 Query Parameters:
+
 - format (xlsx | pdf)
 - from
 - to
@@ -578,6 +587,7 @@ Query Parameters:
 ---
 
 ## 7. Performance Considerations
+
 - Use pagination for large datasets.
 - Limit export size if needed.
 - Cache summary reports if system load increases.

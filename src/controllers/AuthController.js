@@ -211,7 +211,7 @@ class AuthController {
         const updateData = req.body;
 
         const allowedUserFields = [
-            'fullName', 'phone', 'dateOfBirth', 'address'
+            'email','fullName', 'phone', 'dateOfBirth', 'address'
         ];
 
         let userUpdates = {};
