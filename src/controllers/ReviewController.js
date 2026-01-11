@@ -32,7 +32,7 @@ class ReviewController {
                 return res.status(404).json(collection(false, "Appointment not found or not owned by patient", null, "ERROR"));
             }
 
-            if (appointment.status !== "completed") {
+            if (appointment.status !== "Completed") {
                 return res.status(400).json(collection(false, "Can only review completed appointments", null, "ERROR"));
             }
 
@@ -153,7 +153,7 @@ class ReviewController {
                 const decoded = tokenService.verifyAccessToken(cookieService.getAccessToken(req));
                 isAdmin = decoded.role === "admin";
             } catch (e) {
-              
+
             }
 
             if (!isAdmin && !isPatient && !isDoctor) {
