@@ -10,7 +10,9 @@ const appointmentSchema = new mongoose.Schema({
     enum: ["Pending", "Confirmed", "Completed", "Cancelled"],
     default: "Pending"
   },
-  cancelReason: String
+  cancelReason: String,
+  reminderSent24h: { type: Boolean, default: false },
+  reminderSent1h: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Appointment", appointmentSchema);
