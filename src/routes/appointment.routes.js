@@ -1,26 +1,93 @@
-import express from "express";
-import {
-  createAppointment,
-  getMyAppointments,
-  updateAppointmentStatus,
-  cancelAppointment
-} from "../controllers/appointment.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
-
+const express = require("express");
 const router = express.Router();
+const validate = require("../middlewares/validate.middleware");
 
-router.use(protect);
+const appointmentValidation = require("../validations/appointment.validation");
+const appointmentController = require("../controllers/AppointmentController");
+const { requireAuth, auhtorize } = require("../middlewares/auth.middleware");
 
-// 1️⃣ Create appointment
-router.post("/", createAppointment);
+// create new appoitments
+router.post(
+  "/",
+  [
+    requireAuth,
+    auhtorize("patient", "admin"),
+    appointmentValidation.create,
+    validate,
+  ],
+  appointmentController.create
+);
 
-// 2️⃣ Get my appointments
-router.get("/", getMyAppointments);
+// update appointments status
+router.patch(
+  "/status/:id",
+  [
+    requireAuth,
+    auhtorize("doctor", "admin"),
+    appointmentValidation.updateStatus,
+    validate,
+  ],
+  appointmentController.updateStatus
+);
 
-// 3️⃣ Update appointment status
-router.patch("/:id/status", updateAppointmentStatus);
+// update appointment
+router.put(
+  "/:id",
+  [
+    requireAuth,
+    auhtorize("patient", "admin"),
+    appointmentValidation.update,
+    validate,
+  ],
+  appointmentController.update
+);
 
-// 4️⃣ Cancel appointment
-router.patch("/:id/cancel", cancelAppointment);
+// get doctor appointment
+router.get(
+  "/for-doctor",
+  [
+    requireAuth,
+    auhtorize("doctor"),
+    appointmentValidation.getForDoctor,
+    validate,
+  ],
+  appointmentController.getForDoctor
+);
 
-export default router;
+// get patient appointment
+router.get(
+  "/for-patient",
+  [
+    requireAuth,
+    auhtorize("patient"),
+    appointmentValidation.getForPatient,
+    validate,
+  ],
+  appointmentController.getForPatient
+);
+
+//  appointment details
+router.get(
+  "/:id",
+  [
+    requireAuth,
+    auhtorize("patient", "doctor", "admin"),
+    appointmentValidation.getById,
+    validate,
+  ],
+  appointmentController.getById
+);
+
+//  get available appointment for a doctor
+router.get(
+  "/available/:doctorId",
+  [
+    requireAuth,
+    auhtorize("patient", "doctor", "admin"),
+    appointmentValidation.getAvailableSlots,
+    validate,
+  ],
+  appointmentController.getAvailableSlots
+);
+
+module.exports = router;

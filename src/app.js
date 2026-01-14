@@ -48,6 +48,7 @@ app.use("/api/v1/auth", require("./routes/auth.routes"));
 app.use("/api/v1/doctors", require("./routes/doctor.routes"));
 app.use("/api/v1/review", require("./routes/review.routes"));
 app.use("/api/v1/specialty", require("./routes/specialty.routes"));
+app.use("/api/v1/appointments", require("./routes/appointment.routes"));
 
 //patients
 app.use("/api/v1/patients", require("./routes/patient.routes"));
