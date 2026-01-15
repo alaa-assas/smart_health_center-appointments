@@ -60,6 +60,8 @@ app.use(require("./middlewares/error.middleware"));
 // Not Found
 app.use(require("./middlewares/notfound.middleware"));
 
+const initializeSocket = require("./sockets");
+const { startReminders } = require("./utils/appointmentReminders");
 const PORT = process.env.PORT;
 const MONGO_URL = process.env.MONGO_URL;
 
@@ -69,9 +71,14 @@ mongoose
     console.log("Connected to database done");
     // Add this to make it work
     require("./models/DoctorSchedule");
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server is running on: http://localhost:${PORT}`);
     });
+    
+    const io = initializeSocket(server);
+    app.set("io", io);
+
+    startReminders(io);
   })
   .catch((err) => {
     console.log("Error:", err.message);
