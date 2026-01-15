@@ -96,7 +96,58 @@ const authValidation = {
                 returnScore: false
             }).withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
 
-    ]
+    ],
+    updateProfileValidation :
+        [
+            body("email")
+                .optional()
+                .isEmail().withMessage("Invalid email format")
+                .normalizeEmail()
+                .custom(async (email) => {
+                    const existingUser = await User.findOne({email});
+                    if (existingUser) {
+                        throw new Error("Invalid email");
+                    }
+                    return true;
+                })
+                .bail(),
+
+            body("fullName")
+                .optional()
+                .isLength({min: 2, max: 50})
+                .withMessage("Name must be between 2 and 50 characters")
+                .bail(),
+
+            body("phone")
+                .optional()
+                .isMobilePhone("any")
+                .matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/).withMessage("Invalid phone number")
+                .trim()
+                .bail(),
+
+            body('dateOfBirth')
+                .optional()
+                .isISO8601().withMessage('The date of birth must be correct.')
+                .custom((value) => {
+                    if (!value) return true;
+
+                    const date = new Date(value);
+                    const today = new Date();
+
+                    if (date > today) {
+                        throw new Error('The date of birth cannot be in the future.');
+                    }
+
+                    return true;
+                })
+                .toDate()
+                .bail(),
+
+            body('address')
+                .optional()
+                .trim(),
+
+        ]
 
 };
 

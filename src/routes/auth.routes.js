@@ -11,7 +11,8 @@ const {loginLimiter} = require("../middlewares/limiter.middleware");
 const authController = require("../controllers/AuthController")
 const {
     registerValidation,
-    loginValidation
+    loginValidation,
+    updateProfileValidation
 } = require("../validations/auth.validation");
 
 router.post("/register",
@@ -40,11 +41,19 @@ router.get("/profile",
 );
 
 router.put("/profile",
-    [requireAuth],
+    [requireAuth,
+        [...updateProfileValidation, validate]],
     asyncHandler(authController.updateProfile)
 );
 
+//Reset Password
+router.post("/ask-to-update-password", [requireAuth], asyncHandler(authController.askToUpdatePassword));
 
+// PUT
+router.put("/verify/:token", asyncHandler(authController.verifyToUpdatePassword))
+
+router.put("/update-password", [requireAuth],
+    asyncHandler(authController.updatePassword));
 
 
 module.exports = router;
