@@ -46,5 +46,14 @@ router.put("/profile",
     asyncHandler(authController.updateProfile)
 );
 
+//Reset Password
+router.post("/ask-to-update-password", [requireAuth], asyncHandler(authController.askToUpdatePassword));
+
+// PUT
+router.put("/verify/:token", asyncHandler(authController.verifyToUpdatePassword))
+
+router.put("/update-password", [requireAuth],
+    asyncHandler(authController.updatePassword));
+
 
 module.exports = router;

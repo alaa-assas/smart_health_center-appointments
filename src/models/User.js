@@ -65,8 +65,18 @@ const userSchema = new mongoose.Schema({
                 default: 0
             },
 
+            // Verifyng
+            isVerified: {
+                type: Boolean,
+                default: false
+            },
+            isVerifiedToUpdate: {
+                type: Boolean,
+                default: false
+            },
+
             //Relations
-            doctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor"},
+            doctor: {type: mongoose.Schema.Types.ObjectId, ref: "Doctor"},
         },
         {
             timestamps: true,
