@@ -3,6 +3,7 @@ const Doctor = require("../models/Doctor");
 const DoctorSchedule = require("../models/DoctorSchedule");
 const User = require("../models/User");
 const passwordService = require("../utils/passwordService");
+const sendMessage = require("../utils/mail");
 
 class DoctorController {
   async getAll(req, res, next) {
@@ -196,6 +197,22 @@ class DoctorController {
       // conect the doctor with user
       user.doctor = doctor._id;
       await user.save();
+
+      //Send Email
+      const mailOptions = {
+        from: "Health Center",
+        to: user.email,
+        subject: "Your Password",
+        html: `
+                <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #333;">مرحباً!</h2>
+                    <p>تم إنشاء حساب خاص بك.</p>
+                    <p>كلمة السر : ${userData.password}</p>
+                </div>
+            `
+      };
+
+      const result = await sendMessage(mailOptions);
 
       let doctorSchedule = null;
       if (schedule) {
