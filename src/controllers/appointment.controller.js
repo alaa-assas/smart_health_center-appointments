@@ -1,5 +1,7 @@
 import Appointment from "../models/Appointment.js";
 
+const logger = require("../utils/logger");
+
 
 export const createAppointment = async (req, res) => {
   try {

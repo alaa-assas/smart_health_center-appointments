@@ -2,6 +2,9 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
+// HTTP request logger middleware
+const morgan = require("morgan");
+const logger = require("./utils/logger");
 
 const mongoose = require("mongoose");
 const cookies = require("cookie-parser");
@@ -85,3 +88,11 @@ mongoose
   .catch((err) => {
     console.log("Error:", err.message);
   });
+// HTTP request logging
+  app.use(
+  morgan("combined", {
+    stream: {
+      write: (message) => logger.info(message.trim())
+    }
+  })
+);
