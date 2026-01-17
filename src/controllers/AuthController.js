@@ -10,15 +10,28 @@ const sendMessage = require("../utils/mail");
 
 class AuthController {
 
+    /**
+     * Handle failed login attempts for a user
+     *
+     * - Increments failed login attempts counter
+     * - Locks the user account after reaching the maximum attempts
+     * - Sets lock duration to 30 minutes
+     *
+     * @param {Object} user - User mongoose document
+     * @returns {Promise<void>}
+     */
     async handledFailedLogin(user) {
-        // add +1
+        // Increment failed login attempts by 1
         user.failedLoginAttempts = user.failedLoginAttempts + 1;
 
-        // check from limit
+        // Check if failed attempts reached the limit
         if (user.failedLoginAttempts >= 5) {
             user.isLocked = true;
+
+            // Lock duration: 30 minutes (in milliseconds)
             const MIN = (30 * 60 * 1000);
-            // locked -> locked until (30m)
+
+            // Set account lock expiration time
             user.lockedUntil = new Date(Date.now() + MIN)
         }
 
@@ -26,13 +39,44 @@ class AuthController {
         await user.save();
     }
 
+    /**
+     * Reset failed login attempts after successful login
+     *
+     * - Resets failed attempts counter
+     * - Unlocks the user account
+     * - Clears lock expiration time
+     *
+     * @param {Object} user - User mongoose document
+     * @returns {Promise<void>}
+     */
     async resetFailedLoginAttemtps(user) {
         user.failedLoginAttempts = 0;
         user.isLocked = false;
         user.lockedUntil = null;
+
+        // Persist changes to database
         await user.save();
     }
 
+
+    /**
+     * Register a new user
+     *
+     * @route   POST /auth/register
+     * @access  Public
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @body    {String} email
+     * @body    {String} password
+     * @body    {String} fullName
+     * @body    {String} phone
+     * @body    {Date}   dateOfBirth
+     * @body    {String} address
+     *
+     * @returns {Object} Newly created user with authentication tokens
+     */
     async register(req, res) {
 
         const {email, password, fullName, phone, dateOfBirth, address} = req.body;
@@ -82,6 +126,25 @@ class AuthController {
         );
     }
 
+    /**
+     * Login user
+     *
+     * - Validates user credentials
+     * - Handles account lock logic
+     * - Tracks failed login attempts
+     * - Generates authentication tokens
+     *
+     * @route   POST /auth/login
+     * @access  Public
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @body    {String} email
+     * @body    {String} password
+     *
+     * @returns {Object} Logged-in user data with tokens
+     */
     login = async (req, res) => {
 
         const {email, password} = req.body;
@@ -147,6 +210,19 @@ class AuthController {
         );
     }
 
+    /**
+     * Logout current user
+     *
+     * - Clears authentication cookies (access & refresh tokens)
+     *
+     * @route   POST /auth/logout
+     * @access  Authenticated
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @returns {Object} Success message
+     */
     async logout(req, res) {
 
         cookieService.clearTokens(res);
@@ -156,6 +232,22 @@ class AuthController {
 
     }
 
+    /**
+     * Refresh access & refresh tokens
+     *
+     * - Reads refresh token from cookies
+     * - Verifies refresh token validity
+     * - Generates new access & refresh tokens
+     * - Stores new tokens in cookies
+     *
+     * @route   POST /auth/refresh-token
+     * @access  Public (requires refresh token cookie)
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @returns {Object} Success message
+     */
     async refreshToken(req, res) {
 
         const refreshToken = cookieService.getRefreshToken(req);
@@ -186,12 +278,27 @@ class AuthController {
         );
     }
 
+    /**
+     * Get logged-in user profile
+     *
+     * - Returns basic user data
+     * - Populates doctor-specific data if user role is "doctor"
+     *
+     * @route   GET /auth/profile
+     * @access  Authenticated
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @returns {Object} User profile data
+     */
     async getPorfile(req, res) {
 
         const id = req.user.id;
 
         let user = await User.findById(id)
 
+        // If user is a doctor, populate doctor-related data
         if (user.role === "doctor") {
 
             user = await User.findById(id).populate({
@@ -206,6 +313,20 @@ class AuthController {
         return res.status(200).json(collection(true, 'Get Profile Data', user, "SUCCESS"));
     }
 
+    /**
+     * Update logged-in user profile
+     *
+     * - Allows updating only specific fields
+     * - Prevents updating restricted fields (role, password, etc.)
+     *
+     * @route   PUT /auth/profile
+     * @access  Authenticated
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @returns {Object} Updated user data
+     */
     async updateProfile(req, res) {
         const userId = req.user.id;
         const updateData = req.body;
@@ -237,6 +358,20 @@ class AuthController {
         );
     }
 
+    /**
+     * Request password update (send verification email)
+     *
+     * - Generates a temporary URL token
+     * - Sends verification email to the user
+     *
+     * @route   POST /auth/password/request
+     * @access  Authenticated
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @returns {Object} Success message
+     */
     async askToUpdatePassword(req, res) {
         const userId = req.user.id;
         const email = req.user.email;
@@ -246,6 +381,7 @@ class AuthController {
 
         const verifyUrl = `http://localhost:3000/api/v1/auth/verify/${token}`;
 
+        // Email content
         const mailOptions = {
             from: "Health Center",
             to: email,
@@ -283,6 +419,20 @@ class AuthController {
         res.status(200).json(collection(true, "Sent email successfully", null, "SUCCESS"));
     }
 
+    /**
+     * Verify password update request
+     *
+     * - Validates verification token
+     * - Checks token expiration (15 minutes)
+     * - Marks user as verified to update password
+     *
+     * @route   GET /auth/verify/:token
+     * @access  Public
+     *
+     * @param   {String} token - Verification token
+     *
+     * @returns {Object} Success message
+     */
     async verifyToUpdatePassword(req, res) {
         const token = req.params.token;
 
@@ -302,7 +452,7 @@ class AuthController {
         const isTokenExpired = timeDifferenceInMinutes > TOKEN_EXPIRY_MINUTES;
 
         // Always delete the token after checking (used or expired)
-        await UrlToken.deleteOne({ _id: urlToken._id });
+        await UrlToken.deleteOne({_id: urlToken._id});
 
         if (isTokenExpired) {
             throw new Error("Token has expired. Please request a new password reset link.")
@@ -314,6 +464,21 @@ class AuthController {
         res.status(200).json(collection(true, "Verifying Successfully", null, "SUCCESS"));
     }
 
+    /**
+     * Update user password
+     *
+     * - Requires prior verification
+     * - Validates password strength
+     * - Hashes new password before saving
+     *
+     * @route   PUT /auth/password/update
+     * @access  Authenticated (verified)
+     *
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     *
+     * @returns {Object} Success message
+     */
     async updatePassword(req, res) {
         const {password} = req.body;
         const {id} = req.user;

@@ -7,8 +7,16 @@ const { notifyUser } = require("../utils/notificationHelper");
 let ioInstance;
 
 /**
- * Sends a real-time reminder notification to both patient and doctor.
- * Fetches user names from linked User documents via population.
+ * @desc    Send real-time reminder notifications to patient and doctor
+ *
+ * This function sends a personalized real-time reminder to both the patient
+ * and the doctor associated with a given appointment. User full names are
+ * fetched via population from linked User documents.
+ *
+ * @param   {Object} appointment - Appointment document containing patientId and doctorId
+ * @param   {String} timeLabel - Human-readable time indicator (e.g., "30 minutes", "1 hour")
+ *
+ * @returns {Promise<void>} Does not return a value
  */
 const sendReminder = async (appointment, timeLabel) => {
   try {
@@ -51,8 +59,19 @@ const sendReminder = async (appointment, timeLabel) => {
 };
 
 /**
- * Starts the background cron job that checks for upcoming appointments
- * and triggers reminders at the right time (1 hour and 24 hours before).
+ * @desc    Initialize and start the appointment reminder cron job
+ *
+ * This background job runs every minute to detect upcoming confirmed
+ * appointments and sends real-time reminders to patients and doctors
+ * at two predefined intervals:
+ *  - 1 hour before the appointment
+ *  - 24 hours before the appointment
+ *
+ * Each reminder is sent only once using boolean flags to prevent duplicates.
+ *
+ * @param   {Object} io - Initialized Socket.IO server instance
+ *
+ * @returns {void}
  */
 const startReminders = (io) => {
   ioInstance = io;
@@ -61,9 +80,14 @@ const startReminders = (io) => {
   cron.schedule("* * * * *", async () => {
     const now = new Date();
 
-    // === 1-hour reminder logic ===
-    // Look for appointments starting between 55 and 65 minutes from now
-    // (5-minute buffer to handle cron execution timing)
+    /* ============================
+     * 1-HOUR REMINDER WINDOW
+     * ============================
+     * Search for appointments scheduled to start
+     * between 55 and 65 minutes from now.
+     * A 5-minute buffer ensures no reminders are missed
+     * due to cron execution delays.
+     */
     const min1h = new Date(now.getTime() + 55 * 60 * 1000);
     const max1h = new Date(now.getTime() + 65 * 60 * 1000);
     
