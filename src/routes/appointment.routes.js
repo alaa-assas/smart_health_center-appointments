@@ -1,26 +1,24 @@
 import express from "express";
-import {
-  createAppointment,
-  getMyAppointments,
-  updateAppointmentStatus,
-  cancelAppointment
-} from "../controllers/appointment.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
+
+const AppointmentController = require("../controllers/AppointmentController")
+const {requireAuth} = require("../middlewares/auth.middleware");
+const asyncHandler = require("../utils/asyncHanlder");
+
 
 const router = express.Router();
 
-router.use(protect);
+router.use(requireAuth);
 
 // 1️⃣ Create appointment
-router.post("/", createAppointment);
+router.post("/", asyncHandler(AppointmentController.createAppointment));
 
 // 2️⃣ Get my appointments
-router.get("/", getMyAppointments);
+router.get("/", asyncHandler(AppointmentController.getMyAppointments));
 
 // 3️⃣ Update appointment status
-router.patch("/:id/status", updateAppointmentStatus);
+router.patch("/:id/status", asyncHandler(AppointmentController.updateAppointmentStatus));
 
 // 4️⃣ Cancel appointment
-router.patch("/:id/cancel", cancelAppointment);
+router.patch("/:id/cancel", asyncHandler(AppointmentController.cancelAppointment));
 
 export default router;

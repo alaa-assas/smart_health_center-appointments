@@ -37,8 +37,6 @@ class AuthController {
 
         const {email, password, fullName, phone, dateOfBirth, address} = req.body;
 
-        // return  res.json("{email, password, fullName, phone, birthday, address}");
-
         const existEmail = await User.findOne({email});
 
         if (existEmail) {
