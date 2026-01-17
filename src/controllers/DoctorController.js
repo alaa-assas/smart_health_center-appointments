@@ -6,6 +6,23 @@ const passwordService = require("../utils/passwordService");
 const sendMessage = require("../utils/mail");
 
 class DoctorController {
+    /**
+     * Get all doctors with filtering, searching and pagination
+     *
+     * @route   GET /doctors
+     * @access  Public
+     *
+     * @query   {String}  [specialty]       - Specialty ID
+     * @query   {Number}  [minRating=0]      - Minimum average rating
+     * @query   {Number}  [maxRating=5]      - Maximum average rating
+     * @query   {Number}  [minExperience=0]  - Minimum years of experience
+     * @query   {String}  [search]           - Search in bio or medical school
+     * @query   {Number}  [page=1]           - Page number
+     * @query   {Number}  [limit=10]         - Items per page
+     * @query   {Boolean} [showInactive=false] - Include inactive doctors
+     *
+     * @returns {Object} List of doctors with pagination
+     */
     async getAll(req, res, next) {
         const {
             specialty,
@@ -76,6 +93,16 @@ class DoctorController {
         );
     }
 
+    /**
+     * Get doctor details by ID
+     *
+     * @route   GET /doctors/:id
+     * @access  Public
+     *
+     * @param   {String} id - Doctor ID
+     *
+     * @returns {Object} Doctor data with schedule
+     */
     async getById(req, res, next) {
         const {id} = req.params;
 
@@ -109,6 +136,14 @@ class DoctorController {
             );
     }
 
+    /**
+     * Create a new doctor (user + doctor profile + optional schedule)
+     *
+     * @route   POST /doctors
+     * @access  Admin
+     *
+     * @returns {Object} Created doctor data
+     */
     async create(req, res, next) {
         try {
             const {schedule, ...allData} = req.body;
@@ -268,6 +303,12 @@ class DoctorController {
         }
     }
 
+    /**
+     * Update doctor profile and schedule
+     *
+     * @route   PUT /doctors/:id
+     * @access  Admin
+     */
     async update(req, res, next) {
         const {id} = req.params;
         const {schedule, ...doctorData} = req.body;
@@ -315,6 +356,14 @@ class DoctorController {
             );
     }
 
+    /**
+     * @desc    Deactivate a doctor (soft delete)
+     * @route   DELETE /doctors/:id
+     * @access  Protected (Admin)
+     *
+     * This method performs a soft delete by setting `isActive` to false
+     * for both the doctor and their related schedule.
+     */
     async delete(req, res, next) {
         const {id} = req.params;
 
@@ -348,6 +397,14 @@ class DoctorController {
             );
     }
 
+    /**
+     * @desc    Restore a deactivated doctor
+     * @route   PATCH /doctors/:id/restore
+     * @access  Protected (Admin)
+     *
+     * This method reactivates a doctor and their schedule
+     * by setting `isActive` back to true.
+     */
     async restore(req, res, next) {
         const {id} = req.params;
 
@@ -376,6 +433,13 @@ class DoctorController {
             );
     }
 
+    /**
+     * @desc    Get active schedule for a doctor
+     * @route   GET /doctors/:id/schedule
+     * @access  Public / Protected (based on system design)
+     *
+     * This method retrieves the active schedule of an active doctor.
+     */
     async getSchedule(req, res, next) {
         const {id} = req.params;
 
@@ -415,6 +479,7 @@ class DoctorController {
                 )
             );
     }
+
 }
 
 module.exports = new DoctorController();

@@ -230,6 +230,12 @@ class AppointmentController {
         );
     }
 
+    /**
+     * Update appointment date or slot
+     *
+     * @route   PUT /appointments/:id
+     * @access  Patient
+     */
     async update(req, res, next) {
         const {id} = req.params;
         const {date, slot} = req.body;
@@ -242,6 +248,7 @@ class AppointmentController {
             return next(error);
         }
 
+        // Ensure appointment belongs to patient
         const patient = await Patient.findOne({userId});
         if (
             !patient ||
@@ -254,12 +261,14 @@ class AppointmentController {
             return next(error);
         }
 
+        // Only pending appointments can be updated
         if (appointment.status !== "Pending") {
             const error = new Error("You can just update the pending Appointment");
             error.statusCode = 400;
             return next(error);
         }
 
+        // Validate slot duration
         if (slot && !Appointment.isValidDuration(slot)) {
             const error = new Error("The Appointment time should be 30 minuts");
             error.statusCode = 400;
@@ -282,6 +291,19 @@ class AppointmentController {
             .json(collection(true, "Updated succesfully", appointment, "UPDATED"));
     }
 
+    /**
+     * Get appointments for the logged-in doctor
+     *
+     * @route   GET /appointments/doctor
+     * @access  Doctor
+     *
+     * @query   {String} [date]   - Filter by date (YYYY-MM-DD)
+     * @query   {String} [status] - Appointment status (Pending, Confirmed, Cancelled)
+     * @query   {Number} [page=1] - Page number
+     * @query   {Number} [limit=10] - Items per page
+     *
+     * @returns {Object} List of doctor's appointments with pagination
+     */
     async getForDoctor(req, res, next) {
         const userId = req.user.id;
         const {date, status, page = 1, limit = 10} = req.query;
@@ -327,6 +349,18 @@ class AppointmentController {
         );
     }
 
+    /**
+     * Get appointments for the logged-in patient
+     *
+     * @route   GET /appointments/patient
+     * @access  Patient
+     *
+     * @query   {String} [status] - Appointment status
+     * @query   {Number} [page=1]
+     * @query   {Number} [limit=10]
+     *
+     * @returns {Object} List of patient's appointments with pagination
+     */
     async getForPatient(req, res, next) {
         const userId = req.user.id;
         const {status, page = 1, limit = 10} = req.query;
@@ -369,6 +403,16 @@ class AppointmentController {
         );
     }
 
+    /**
+     * Get appointment details by ID
+     *
+     * @route   GET /appointments/:id
+     * @access  Admin | Doctor | Patient
+     *
+     * @param   {String} id - Appointment ID
+     *
+     * @returns {Object} Appointment details
+     */
     async getById(req, res, next) {
         const {id} = req.params;
         const userId = req.user.id;
@@ -426,6 +470,17 @@ class AppointmentController {
             );
     }
 
+    /**
+     * Get available time slots for a doctor on a specific date
+     *
+     * @route   GET /appointments/available-slots/:doctorId
+     * @access  Public
+     *
+     * @param   {String} doctorId - Doctor ID
+     * @query   {String} [date] - Date (YYYY-MM-DD)
+     *
+     * @returns {Object} Available time slots
+     */
     async getAvailableSlots(req, res, next) {
         const {doctorId} = req.params;
         const {date = new Date()} = req.query;

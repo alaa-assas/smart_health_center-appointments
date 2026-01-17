@@ -4,7 +4,17 @@ const collection = require("../utils/collection");
 const cookieService = require("../utils/cookieService");
 const tokenService = require("../utils/tokenService");
 
-// Helper to get verified user ID from access token in cookie
+/**
+ * @desc    Extract user ID from access token stored in cookies
+ *
+ * This helper function retrieves the access token from the request cookies,
+ * verifies its validity, and returns the authenticated user's ID.
+ *
+ * @param   {Object} req - Express request object
+ * @returns {String} userId - Authenticated user's ID extracted from the token
+ *
+ * @throws  {Error} If access token is missing or invalid
+ */
 const getUserIdFromAccessToken = (req) => {
     const accessToken = cookieService.getAccessToken(req);
     if (!accessToken) {
@@ -15,6 +25,15 @@ const getUserIdFromAccessToken = (req) => {
 };
 
 class ReviewController {
+
+    /**
+     * @desc    Create a new review for a completed appointment
+     * @route   POST /reviews
+     * @access  Protected (Patient)
+     *
+     * This method allows a patient to create a review for their own
+     * completed appointment. Only one review per appointment is allowed.
+     */
     async create(req, res, next) {
         const {appointmentId, stars, comment} = req.body;
 
@@ -51,6 +70,13 @@ class ReviewController {
 
     }
 
+    /**
+     * @desc    Update an existing review
+     * @route   PUT /reviews/:id
+     * @access  Protected (Patient - Owner only)
+     *
+     * This method allows a patient to update their own review.
+     */
     async update(req, res, next) {
         const {id} = req.params;
         const {stars, comment} = req.body;
@@ -78,6 +104,14 @@ class ReviewController {
         return res.json(collection(true, "Review updated successfully", review, "SUCCESS"));
     }
 
+    /**
+     * @desc    Retrieve all reviews (with optional date filtering)
+     * @route   GET /reviews
+     * @access  Protected (Admin only)
+     *
+     * This method allows admins to retrieve all reviews,
+     * optionally filtered by creation date.
+     */
     async getAll(req, res, next) {
         let userId, isAdmin = false;
         try {
@@ -109,6 +143,14 @@ class ReviewController {
         return res.json(collection(true, "Reviews retrieved successfully", reviews, "SUCCESS"));
     }
 
+    /**
+     * @desc    Get a single review by ID
+     * @route   GET /reviews/:id
+     * @access  Protected (Patient / Doctor / Admin)
+     *
+     * This method allows access to a review only if the requester
+     * is the related patient, doctor, or an admin.
+     */
     async getById(req, res, next) {
         const {id} = req.params;
 
@@ -151,6 +193,13 @@ class ReviewController {
         return res.json(collection(true, "Review retrieved successfully", review, "SUCCESS"));
     }
 
+    /**
+     * @desc    Delete a review
+     * @route   DELETE /reviews/:id
+     * @access  Protected (Patient - Owner only)
+     *
+     * This method allows a patient to delete their own review.
+     */
     async delete(req, res, next) {
         const {id} = req.params;
 
