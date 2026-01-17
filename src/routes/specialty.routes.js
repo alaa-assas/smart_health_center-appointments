@@ -1,7 +1,7 @@
-
 const express = require("express");
 const router = express.Router();
 const validate = require('../middlewares/validate.middleware');
+const asyncHandler = require("../utils/asyncHanlder");
 
 const specialtyValidation = require("../validations/specialty.validation");
 
@@ -17,7 +17,7 @@ router.post(
         specialtyValidation.create,
         validate
     ],
-    specialtyController.create
+    asyncHandler(specialtyController.create)
 );
 
 /**
@@ -25,12 +25,12 @@ router.post(
  * Update a specialty by ID
  */
 router.put(
-  "/:id",
-  [
-    specialtyValidation.update,
-    validate
-  ],
-  specialtyController.update
+    "/:id",
+    [
+        specialtyValidation.update,
+        validate
+    ],
+    asyncHandler(specialtyController.update)
 );
 
 /**
@@ -38,12 +38,12 @@ router.put(
  * Get a specialty by ID
  */
 router.get(
-  "/:id",
-  [
-    specialtyValidation.getById,
-    validate
-  ],
-  specialtyController.getById
+    "/:id",
+    [
+        specialtyValidation.getById,
+        validate
+    ],
+    asyncHandler(specialtyController.getById)
 );
 
 /**
@@ -51,18 +51,18 @@ router.get(
  * Delete a specialty by ID
  */
 router.delete(
-  "/:id",
-  [
-    specialtyValidation.delete,
-    validate
-  ],
-  specialtyController.delete
+    "/:id",
+    [
+        specialtyValidation.delete,
+        validate
+    ],
+    asyncHandler(specialtyController.delete)
 );
 
 /**
  * @GET /api/specialties
  * Get all specialties
  */
-router.get("/", specialtyController.getAll); 
+router.get("/", asyncHandler(specialtyController.getAll));
 
 module.exports = router;

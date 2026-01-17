@@ -1,19 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const validate = require("../middlewares/validate.middleware");
+const asyncHandler = require("../utils/asyncHanlder");
+
 
 const doctorValidation = require("../validations/doctor.validation");
 const DoctorController = require("../controllers/DoctorController");
-const { auhtorize, requireAuth } = require("../middlewares/auth.middleware");
+const {auhtorize, requireAuth} = require("../middlewares/auth.middleware");
 
 /**
  * @POST /api/v1/doctors
  * Create a new doctor (Admin only)
  */
 router.post(
-  "/",
-  [requireAuth, auhtorize("admin"), doctorValidation.create, validate],
-  DoctorController.create
+    "/",
+    [requireAuth, auhtorize("admin"), doctorValidation.create, validate],
+    DoctorController.create
 );
 
 /**
@@ -21,9 +23,9 @@ router.post(
  * Update doctor info (Admin only)
  */
 router.put(
-  "/:id",
-  [requireAuth, auhtorize("admin"), doctorValidation.update, validate],
-  DoctorController.update
+    "/:id",
+    [requireAuth, auhtorize("admin"), doctorValidation.update, validate],
+    asyncHandler(DoctorController.update)
 );
 
 /**
@@ -31,9 +33,9 @@ router.put(
  * Get doctor details + specialty, schedule, reviews
  */
 router.get(
-  "/:id",
-  [doctorValidation.getById, validate],
-  DoctorController.getById
+    "/:id",
+    [doctorValidation.getById, validate],
+    asyncHandler(DoctorController.getById)
 );
 
 /**
@@ -41,9 +43,9 @@ router.get(
  * Soft delete a doctor (set isActive to false)
  */
 router.delete(
-  "/:id",
-  [requireAuth, auhtorize("admin"), doctorValidation.delete, validate],
-  DoctorController.delete
+    "/:id",
+    [requireAuth, auhtorize("admin"), doctorValidation.delete, validate],
+    asyncHandler(DoctorController.delete)
 );
 
 /**
@@ -51,25 +53,28 @@ router.delete(
  * Restore a soft deleted doctor
  */
 router.post(
-  "/:id/restore",
-  [requireAuth, auhtorize("admin"), doctorValidation.getById, validate],
-  DoctorController.restore
+    "/:id/restore",
+    [requireAuth, auhtorize("admin"), doctorValidation.getById, validate],
+    asyncHandler(DoctorController.restore)
 );
 
 /**
  * @GET /api/v1/doctors
  * Get all doctors with search/filter options
  */
-router.get("/", [doctorValidation.getAll, validate], DoctorController.getAll);
+router.get("/",
+    [doctorValidation.getAll, validate],
+    asyncHandler(DoctorController.getAll)
+);
 
 /**
  * @GET /api/v1/doctors/:id/schedule
  * Get doctor's schedule
  */
 router.get(
-  "/:id/schedule",
-  [doctorValidation.getById, validate],
-  DoctorController.getSchedule
+    "/:id/schedule",
+    [doctorValidation.getById, validate],
+    asyncHandler(DoctorController.getSchedule)
 );
 
 module.exports = router;

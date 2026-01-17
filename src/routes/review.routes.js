@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const validate = require("../middlewares/validate.middleware");
+const asyncHandler = require("../utils/asyncHanlder");
 
 const reviewValidation = require("../validations/review.validation");
 const reviewController = require("../controllers/ReviewController");
@@ -11,12 +12,12 @@ const reviewController = require("../controllers/ReviewController");
  * Patient adds a review for a completed appointment
  */
 router.post(
-  "/",
-  [
-    reviewValidation.create,
-    validate
-  ],
-  reviewController.create
+    "/",
+    [
+        reviewValidation.create,
+        validate
+    ],
+    asyncHandler(reviewController.create)
 );
 
 /**
@@ -24,12 +25,12 @@ router.post(
  * Patient updates their review (stars & comment only)
  */
 router.put(
-  "/:id",
-  [
-    reviewValidation.update,
-    validate
-  ],
-  reviewController.update
+    "/:id",
+    [
+        reviewValidation.update,
+        validate
+    ],
+    asyncHandler(reviewController.update)
 );
 
 /**
@@ -37,12 +38,12 @@ router.put(
  * Get all reviews (filter by date) — Admin only
  */
 router.get(
-  "/",
-  [
-    reviewValidation.getAll,
-    validate
-  ],
-  reviewController.getAll
+    "/",
+    [
+        reviewValidation.getAll,
+        validate
+    ],
+    asyncHandler(reviewController.getAll)
 );
 
 /**
@@ -50,12 +51,12 @@ router.get(
  * Get detailed review with patient & doctor details — Admin, Patient, Doctor
  */
 router.get(
-  "/:id",
-  [
-    reviewValidation.getById,
-    validate
-  ],
-  reviewController.getById
+    "/:id",
+    [
+        reviewValidation.getById,
+        validate
+    ],
+    asyncHandler(reviewController.getById)
 );
 
 /**
@@ -63,12 +64,12 @@ router.get(
  * Patient deletes their own review
  */
 router.delete(
-  "/:id",
-  [
-    reviewValidation.delete,
-    validate
-  ],
-  reviewController.delete
+    "/:id",
+    [
+        reviewValidation.delete,
+        validate
+    ],
+    asyncHandler(reviewController.delete)
 );
 
 module.exports = router;
