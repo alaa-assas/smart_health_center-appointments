@@ -511,7 +511,7 @@ Allows the admin to view and filter appointments.
 
 ---
 
-### 2.2 API Endpoint: GET /api/v1/admin/reports/appointments
+### 2.2 API Endpoint: `GET /api/v1/admin/reports/appointments`
 
 Query Parameters:
 
@@ -533,7 +533,7 @@ Query Parameters:
 
 ---
 
-### 3.2 API Endpoint: GET /api/v1/admin/reports/summary
+### 3.2 API Endpoint: `GET /api/v1/admin/reports/summary`
 
 ## 4. Data Aggregation Strategy
 
@@ -558,7 +558,7 @@ Query Parameters:
 
 ---
 
-### 5.2 Export Endpoint: GET /api/v1/admin/reports/export
+### 5.2 Export Endpoint: `GET /api/v1/admin/reports/export`
 
 Query Parameters:
 
