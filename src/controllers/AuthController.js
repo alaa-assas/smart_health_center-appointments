@@ -1,5 +1,6 @@
 const collection = require("../utils/collection");
 const User = require("../models/User");
+const Patient = require("../models/Patient")
 const Doctor = require("../models/Doctor");
 const UrlToken = require("../models/UrlToken");
 const passwordService = require('../utils/passwordService');
@@ -79,7 +80,7 @@ class AuthController {
      */
     async register(req, res) {
 
-        const {email, password, fullName, phone, dateOfBirth, address} = req.body;
+        const {email, password, fullName, phone, dateOfBirth, address, gender, chronicConditions} = req.body;
 
         const existEmail = await User.findOne({email});
 
@@ -104,6 +105,11 @@ class AuthController {
             address
         });
 
+        const patient = await Patient.create({
+            userId:user._id,
+            gender,
+            chronicConditions
+        });
         // Generate tokens
         const accessToken = tokenService.genrateAccessToken({
             id: user._id,
@@ -122,7 +128,7 @@ class AuthController {
         cookieService.setRefreshToken(res, refreshToken);
 
         return res.status(200).json(
-            collection(true, "Signed Up Successfully", user, "SUCCESS")
+            collection(true, "Signed Up Successfully", {user, patient}, "SUCCESS")
         );
     }
 
@@ -293,14 +299,14 @@ class AuthController {
      * @returns {Object} User profile data
      */
     async getPorfile(req, res) {
-
         const id = req.user.id;
-
         let user = await User.findById(id)
 
-        // If user is a doctor, populate doctor-related data
-        if (user.role === "doctor") {
-
+        // If user is a patient
+        if (user.role === "patient") {
+            const patient = await Patient.findOne({userId:id}).select(["gender","chronicConditions","isActive"]);
+            user = {user, patient}
+        }else if (user.role === "doctor") { // If user is a doctor, populate doctor-related data
             user = await User.findById(id).populate({
                 path: 'doctor',
                 populate: [
@@ -351,10 +357,9 @@ class AuthController {
         if (!updatedUser) {
             return res.status(404).json(collection(false, 'User not found', null, "NOT_FOUND"));
         }
-        let responseData = {user: updatedUser};
 
         return res.status(200).json(
-            collection(true, 'Profile updated successfully', responseData, "SUCCESS")
+            collection(true, 'Profile updated successfully', {user: updatedUser}, "SUCCESS")
         );
     }
 
