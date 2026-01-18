@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const validate = require("../middlewares/validate.middleware");
 const asyncHandler = require("../utils/asyncHanlder");
-
+const {auhtorize, requireAuth} = require("../middlewares/auth.middleware");
 const reviewValidation = require("../validations/review.validation");
 const reviewController = require("../controllers/ReviewController");
 
@@ -14,6 +14,8 @@ const reviewController = require("../controllers/ReviewController");
 router.post(
     "/",
     [
+        requireAuth,
+        auhtorize("patient"),
         reviewValidation.create,
         validate
     ],
@@ -27,6 +29,8 @@ router.post(
 router.put(
     "/:id",
     [
+        requireAuth,
+        auhtorize("patient"),
         reviewValidation.update,
         validate
     ],
@@ -40,6 +44,8 @@ router.put(
 router.get(
     "/",
     [
+        requireAuth,
+        auhtorize("admin"),
         reviewValidation.getAll,
         validate
     ],
@@ -53,6 +59,8 @@ router.get(
 router.get(
     "/:id",
     [
+        requireAuth,
+        auhtorize("patient","admin","doctor"),
         reviewValidation.getById,
         validate
     ],
@@ -66,6 +74,8 @@ router.get(
 router.delete(
     "/:id",
     [
+        requireAuth,
+        auhtorize("patient"),
         reviewValidation.delete,
         validate
     ],

@@ -2,9 +2,8 @@ const express = require("express");
 const router = express.Router();
 const validate = require('../middlewares/validate.middleware');
 const asyncHandler = require("../utils/asyncHanlder");
-
+const {auhtorize, requireAuth} = require("../middlewares/auth.middleware");
 const specialtyValidation = require("../validations/specialty.validation");
-
 const specialtyController = require("../controllers/SpecialtyController");
 
 /**
@@ -14,6 +13,8 @@ const specialtyController = require("../controllers/SpecialtyController");
 router.post(
     "/",
     [
+        requireAuth,
+        auhtorize("admin"),
         specialtyValidation.create,
         validate
     ],
@@ -27,6 +28,8 @@ router.post(
 router.put(
     "/:id",
     [
+        requireAuth,
+        auhtorize("admin"),
         specialtyValidation.update,
         validate
     ],
@@ -40,6 +43,8 @@ router.put(
 router.get(
     "/:id",
     [
+        requireAuth,
+        auhtorize("admin"),
         specialtyValidation.getById,
         validate
     ],
@@ -53,6 +58,8 @@ router.get(
 router.delete(
     "/:id",
     [
+        requireAuth,
+        auhtorize("admin"),
         specialtyValidation.delete,
         validate
     ],
@@ -63,6 +70,11 @@ router.delete(
  * @GET /api/specialties
  * Get all specialties
  */
-router.get("/", asyncHandler(specialtyController.getAll));
+router.get("/", 
+    [
+        requireAuth,
+        auhtorize("admin")
+    ],
+     asyncHandler(specialtyController.getAll));
 
 module.exports = router;

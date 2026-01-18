@@ -1,28 +1,9 @@
 const Review = require("../models/Review");
 const Appointment = require("../models/Appointment");
 const collection = require("../utils/collection");
+const getUserIdFromAccessToken = require("../utils/getUserIdFromAccessToken")
 const cookieService = require("../utils/cookieService");
 const tokenService = require("../utils/tokenService");
-
-/**
- * @desc    Extract user ID from access token stored in cookies
- *
- * This helper function retrieves the access token from the request cookies,
- * verifies its validity, and returns the authenticated user's ID.
- *
- * @param   {Object} req - Express request object
- * @returns {String} userId - Authenticated user's ID extracted from the token
- *
- * @throws  {Error} If access token is missing or invalid
- */
-const getUserIdFromAccessToken = (req) => {
-    const accessToken = cookieService.getAccessToken(req);
-    if (!accessToken) {
-        throw new Error("No access token found");
-    }
-    const decoded = tokenService.verifyAccessToken(accessToken);
-    return decoded.id;
-};
 
 class ReviewController {
 
@@ -136,8 +117,8 @@ class ReviewController {
 
         const reviews = await Review.find(filter)
             .populate("appointmentId", "patient doctor")
-            .populate("appointmentId.patient", "name email")
-            .populate("appointmentId.doctor", "name specialty")
+            .populate("appointmentId.patient", "fullName email")
+            .populate("appointmentId.doctor", "fullName specialty")
             .sort({createdAt: -1});
 
         return res.json(collection(true, "Reviews retrieved successfully", reviews, "SUCCESS"));
@@ -164,8 +145,8 @@ class ReviewController {
         const review = await Review.findById(id).populate({
             path: "appointmentId",
             populate: [
-                {path: "patient", select: "name email"},
-                {path: "doctor", select: "name specialty"},
+                {path: "patient", select: "fullName email"},
+                {path: "doctor", select: "fullName specialty"},
             ],
         });
 

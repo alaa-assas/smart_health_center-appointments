@@ -7,7 +7,7 @@ const asyncHandler = require("../utils/asyncHanlder");
 
 // All routes here require Authentication and Admin role
 router.use(requireAuth);
-router.use(auhtorize("ADMIN"));
+router.use(auhtorize("admin"));
 
 router.get("/appointments", asyncHandler(ReportController.getAppointmentsReport));
 router.get("/summary", asyncHandler(ReportController.getSummaryReport));
