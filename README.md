@@ -120,76 +120,77 @@
 
 ### 📡 **Authentication & Users**
 
-```
-POST /api/v1/auth/register | Create a user account (automatically assigned role: Patient) | No | Patient
-POST /api/v1/auth/login | Log in with email and password | No | None
-POST /api/v1/auth/logout | Log out the current user | Yes | None
-POST /api/v1/auth/refresh-token | Refresh JWT tokens | Yes | None
-GET /api/v1/auth/profile | View logged-in user profile (doctor includes specialty & schedule) | Yes | None
-PUT /api/v1/auth/profile | Update user profile | Yes | None
-```
+| Method | Endpoint                   | Description                                                        | Auth Required | Role    |
+| ------ | -------------------------- | ------------------------------------------------------------------ | ------------- | ------- |
+| POST   | /api/v1/auth/register      | Create a user account (automatically assigned role: Patient)       | No            | Patient |
+| POST   | /api/v1/auth/login         | Log in with email and password                                     | No            | None    |
+| POST   | /api/v1/auth/logout        | Log out the current user                                           | Yes           | None    |
+| POST   | /api/v1/auth/refresh-token | Refresh JWT tokens                                                 | Yes           | None    |
+| GET    | /api/v1/auth/profile       | View logged-in user profile (doctor includes specialty & schedule) | Yes           | None    |
+| PUT    | /api/v1/auth/profile       | Update user profile                                                | Yes           | None    |
 
 ---
 
 ### 🩺 **Specialties Operations**
 
-```
-POST /api/v1/specialties | Admin adds a new medical specialty | Yes | Admin
-PUT /api/v1/specialties/:id | Update an existing specialty | Yes | Admin
-GET /api/v1/specialties | Get all specialties | Yes | Admin
-GET /api/v1/specialties/:id | Get details of a specific specialty | Yes | Admin
-DELETE /api/v1/specialties/:id | Remove a specialty from the system | Yes | Admin
-```
+| Method | Endpoint                | Description                         | Auth Required | Role  |
+| ------ | ----------------------- | ----------------------------------- | ------------- | ----- |
+| POST   | /api/v1/specialties     | Admin adds a new medical specialty  | Yes           | Admin |
+| PUT    | /api/v1/specialties/:id | Update an existing specialty        | Yes           | Admin |
+| GET    | /api/v1/specialties     | Get all specialties                 | Yes           | Admin |
+| GET    | /api/v1/specialties/:id | Get details of a specific specialty | Yes           | Admin |
+| DELETE | /api/v1/specialties/:id | Remove a specialty from the system  | Yes           | Admin |
 
 ---
 
 ### 👨‍⚕️ **Doctor & Schedule Operations**
 
-```
-POST /api/v1/doctors | Admin adds a doctor + their schedule | Yes | Admin
-PUT /api/v1/doctors/:id | Update doctor info & schedule | Yes | Admin
-GET /api/v1/doctors | Get all doctors with search/filter options (name, specialty, location) | No | None
-GET /api/v1/doctors/:id | Get doctor details + specialty, schedule, reviews | No | None
-GET /api/v1/doctors/:id/schedule  | Get doctor schedule | NO | None
-DELETE /api/v1/doctors/:id | Remove doctor + delete their schedule | Yes | Admin
-POST /api/v1/doctors/:id/restore  | restore the doctor after soft delete | Yes | Admin
-```
+| Method | Endpoint                     | Description                                                            | Auth Required | Role  |
+| ------ | ---------------------------- | ---------------------------------------------------------------------- | ------------- | ----- |
+| POST   | /api/v1/doctors              | Admin adds a doctor + their schedule                                   | Yes           | Admin |
+| PUT    | /api/v1/doctors/:id          | Update doctor info & schedule                                          | Yes           | Admin |
+| GET    | /api/v1/doctors              | Get all doctors with search/filter options (name, specialty, location) | No            | None  |
+| GET    | /api/v1/doctors/:id          | Get doctor details + specialty, schedule, reviews                      | No            | None  |
+| GET    | /api/v1/doctors/:id/schedule | Get doctor schedule                                                    | No            | None  |
+| DELETE | /api/v1/doctors/:id          | Remove doctor + delete their schedule                                  | Yes           | Admin |
+| POST   | /api/v1/doctors/:id/restore  | Restore the doctor after soft delete                                   | Yes           | Admin |
 
 ---
 
 ### 📅 **Appointment Operations**
 
-```
-POST /api/v1/appointments | Patient books an appointment with a doctor | Yes | Patient, Admin
-PATCH /api/v1/appointments/status/:id | Doctor updates appointment status (confirmed, canceled, completed) | Yes | Doctor, Admin
-PUT /api/v1/appointments/:id | Patient modifies appointment details | Yes | Patient
-GET /api/v1/appointments/for-doctor | Get appointments for logged-in doctor (filter by date) | Yes | Doctor
-GET /api/v1/appointments/for-patient | Get appointments for logged-in patient (filter by status) | Yes | Patient
-GET /api/v1/appointments/:id | Get details of a specific appointment | Yes | Patient, Doctor, Admin
-GET /api/v1/appointments/available/:doctorId | Get available slots for a doctor on a given date | Yes | Patient, Doctor, Admin
-```
+| Method | Endpoint                                 | Description                                                        | Auth Required | Role                   |
+| ------ | ---------------------------------------- | ------------------------------------------------------------------ | ------------- | ---------------------- |
+| POST   | /api/v1/appointments                     | Patient books an appointment with a doctor                         | Yes           | Patient, Admin         |
+| PATCH  | /api/v1/appointments/status/:id          | Doctor updates appointment status (confirmed, canceled, completed) | Yes           | Doctor, Admin          |
+| PUT    | /api/v1/appointments/:id                 | Patient modifies appointment details                               | Yes           | Patient                |
+| GET    | /api/v1/appointments/for-doctor          | Get appointments for logged-in doctor (filter by date)             | Yes           | Doctor                 |
+| GET    | /api/v1/appointments/for-patient         | Get appointments for logged-in patient (filter by status)          | Yes           | Patient                |
+| GET    | /api/v1/appointments/:id                 | Get details of a specific appointment                              | Yes           | Patient, Doctor, Admin |
+| GET    | /api/v1/appointments/available/:doctorId | Get available slots for a doctor on a given date                   | Yes           | Patient, Doctor, Admin |
 
 ---
 
 ### ⭐ **Review Operations**
 
-```
-POST /api/v1/reviews | Patient adds a review for a completed appointment | Yes | Patient
-PUT /api/v1/reviews/:id | Patient updates their review (stars & comment only) | Yes | Patient
-GET /api/v1/reviews/ | Get all reviews (filter by date) | Yes | Admin
-GET /api/v1/reviews/:id | Get detailed review with patient & doctor details | Yes | Admin, Patient, Doctor
-DELETE /api/v1/reviews/:id | Patient deletes their own review | Yes | Patient
-```
+| Method | Endpoint            | Description                                         | Auth Required | Role                   |
+| ------ | ------------------- | --------------------------------------------------- | ------------- | ---------------------- |
+| POST   | /api/v1/reviews     | Patient adds a review for a completed appointment   | Yes           | Patient                |
+| PUT    | /api/v1/reviews/:id | Patient updates their review (stars & comment only) | Yes           | Patient                |
+| GET    | /api/v1/reviews     | Get all reviews (filter by date)                    | Yes           | Admin                  |
+| GET    | /api/v1/reviews/:id | Get detailed review with patient & doctor details   | Yes           | Admin, Patient, Doctor |
+| DELETE | /api/v1/reviews/:id | Patient deletes their own review                    | Yes           | Patient                |
 
 ---
 
 ### 📊 **Reports**
 
-```
-GET /api/v1/reports/logins | Export login reports (filtered by date) | Yes | Admin
-GET /api/v1/reports/appointment | Export appointment reports (filtered by date) | Yes | Admin
-GET /api/v1/reports/appointment-status | Report on booking confirmations/cancellations (filter by date/status) | Yes | Admin
-```
+| Method | Endpoint                           | Description                                     | Auth Required | Role  |
+| ------ | ---------------------------------- | ----------------------------------------------- | ------------- | ----- |
+| GET    | /api/v1/admin/reports/appointments | Detailed filtered appointment list              | Yes           | Admin |
+| GET    | /api/v1/admin/reports/summary      | Summary metrics for status / doctor / specialty | Yes           | Admin |
+| GET    | /api/v1/admin/reports/audit-logs   | Fetch system audit trails                       | Yes           | Admin |
+| GET    | /api/v1/admin/reports/export       | Download report as `.xlsx` or `.pdf`            | Yes           | Admin |
 
 ### 👥 **Roles & Permissions (RBAC)**
 
@@ -271,12 +272,10 @@ smart_health_center-appointments/
 ### 1.2 Notification Channels
 
 1. **In-App Notifications (Mandatory)**
-
    - Stored in the database.
    - Displayed inside the application UI.
 
 2. **Email Notifications (Should Have)**
-
    - Sent using Nodemailer (or SendGrid).
    - Used for confirmations, cancellations, and reminders.
 
@@ -512,7 +511,7 @@ Allows the admin to view and filter appointments.
 
 ---
 
-### 2.2 API Endpoint: GET /api/admin/reports/appointments
+### 2.2 API Endpoint: GET /api/v1/admin/reports/appointments
 
 Query Parameters:
 
@@ -534,7 +533,7 @@ Query Parameters:
 
 ---
 
-### 3.2 API Endpoint: GET /api/admin/reports/summary
+### 3.2 API Endpoint: GET /api/v1/admin/reports/summary
 
 ## 4. Data Aggregation Strategy
 
@@ -559,7 +558,7 @@ Query Parameters:
 
 ---
 
-### 5.2 Export Endpoint: GET /api/admin/reports/export
+### 5.2 Export Endpoint: GET /api/v1/admin/reports/export
 
 Query Parameters:
 
