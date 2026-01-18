@@ -3,9 +3,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 
 const authValidation = {
-    registerValidation :
-        [
-
+    registerValidation : [
         body("email")
             .notEmpty().withMessage("Email is required")
             .isEmail().withMessage("Invalid email format")
@@ -66,6 +64,13 @@ const authValidation = {
             .optional()
             .trim(),
 
+        body("gender")
+            .optional()
+            .isIn(["male", "female", "other"]).withMessage("Gender must be male, female, or other"),
+
+        body("chronicConditions")
+            .optional()
+            .isArray().withMessage("Chronic conditions must be an array of strings"),
     ],
 
     loginValidation : [
