@@ -4,6 +4,7 @@ const Doctor = require("../models/Doctor");
 const DoctorSchedule = require("../models/DoctorSchedule");
 const Patient = require("../models/Patient");
 const AppointmentUtils = require("../utils/appointmentUtils");
+const { notifyUser } = require("../utils/notificationHelper");
 
 class AppointmentController {
 
@@ -151,7 +152,7 @@ class AppointmentController {
         });
 
         await appointment.save();
-
+        
         // Populate full appointment data
         const fullAppointment = await Appointment.findById(appointment._id)
             .populate({
@@ -166,6 +167,42 @@ class AppointmentController {
                 ],
             });
 
+       const io = req.app.get("io");
+
+        if (io) {
+            const patientName = fullAppointment.patientId?.userId?.fullName || 'Patient';
+            const doctorName = fullAppointment.doctorId?.userId?.fullName || 'Doctor';
+            const timeLabel = `${slot.start} - ${slot.end}`;
+            const appointmentDate = new Date(date).toLocaleDateString();
+
+            const doctorUserId = fullAppointment.doctorId?.userId?._id;
+            const patientUserId = fullAppointment.patientId?.userId?._id;
+
+            if (doctorUserId) {
+                notifyUser(io, doctorUserId, 
+                `You have a new appointment with patient ${patientName} at ${timeLabel}`,
+                {
+                    type: "appointment_created",
+                    appointmentId: appointment._id,
+                    timeLabel,
+                    for: "doctor"
+                }
+                );
+            }
+
+            if (req.user.role !== "admin" && patientUserId) {
+                notifyUser(io, patientUserId,
+                `Your appointment with Dr. ${doctorName} is scheduled for ${appointmentDate} at ${timeLabel}`,
+                {
+                    type: "appointment_created",
+                    appointmentId: appointment._id,
+                    timeLabel,
+                    for: "patient"
+                }
+                );
+            }
+        }
+        
         return res
             .status(201)
             .json(
@@ -184,34 +221,35 @@ class AppointmentController {
      * @route   PATCH /appointments/:id/status
      * @access  Admin | Doctor
      */
+
     async updateStatus(req, res, next) {
-        const {id} = req.params;
-        const {status, cancelReason} = req.body;
+        const { id } = req.params;
+        const { status, cancelReason } = req.body;
         const userId = req.user.id;
 
         const appointment = await Appointment.findById(id);
         if (!appointment) {
-            const error = new Error("Appointment not found ");
+            const error = new Error("Appointment not found");
             error.statusCode = 404;
             return next(error);
         }
 
         // Doctor can only update his own appointments
         if (req.user.role === "doctor") {
-            const doctor = await Doctor.findOne({userId});
+            const doctor = await Doctor.findOne({ userId });
             if (!doctor || doctor._id.toString() !== appointment.doctorId.toString()) {
-                const error = new Error("You are not allowed to update this Appointment");
-                error.statusCode = 403;
-                return next(error);
+            const error = new Error("You are not allowed to update this Appointment");
+            error.statusCode = 403;
+            return next(error);
             }
         }
 
         // Handle cancellation
         if (status === "Cancelled") {
             if (!cancelReason) {
-                const error = new Error("should add the reason");
-                error.statusCode = 400;
-                return next(error);
+            const error = new Error("Cancellation reason is required");
+            error.statusCode = 400;
+            return next(error);
             }
             appointment.cancelReason = cancelReason;
             appointment.cancelledBy = userId;
@@ -220,10 +258,58 @@ class AppointmentController {
         appointment.status = status;
         await appointment.save();
 
+        const io = req.app.get("io");
+        if (io && (status === "Confirmed" || status === "Cancelled")) {
+            const populatedAppointment = await Appointment.findById(appointment._id)
+            .populate({
+                path: "patientId",
+                populate: { path: "userId", select: "fullName" },
+            })
+            .populate({
+                path: "doctorId",
+                populate: { path: "userId", select: "fullName" },
+            });
+
+            const patientUserId = populatedAppointment?.patientId?.userId?._id;
+            const doctorUserId = populatedAppointment?.doctorId?.userId?._id;
+            const patientName = populatedAppointment?.patientId?.userId?.fullName || "Patient";
+            const doctorName = populatedAppointment?.doctorId?.userId?.fullName || "Doctor";
+
+            let messageForPatient = "";
+            let messageForDoctor = "";
+
+            if (status === "Confirmed") {
+                messageForPatient = `Your appointment with Dr. ${doctorName} on ${new Date(appointment.date).toLocaleDateString()} has been confirmed.`;
+                messageForDoctor = `You confirmed your appointment with patient ${patientName}.`;
+            } else if (status === "Cancelled") {
+                const reason = cancelReason || "No reason provided";
+                messageForPatient = `Your appointment with Dr. ${doctorName} was cancelled. Reason: ${reason}`;
+                messageForDoctor = `You cancelled your appointment with patient ${patientName}. Reason: ${reason}`;
+            }
+
+            if (doctorUserId) {
+                notifyUser(io, doctorUserId, messageForDoctor, {
+                    type: "appointment_status_update",
+                    appointmentId: appointment._id,
+                    status: status,
+                    for: "doctor",
+                });
+            }
+
+            if (patientUserId) {
+                notifyUser(io, patientUserId, messageForPatient, {
+                    type: "appointment_status_update",
+                    appointmentId: appointment._id,
+                    status: status,
+                    for: "patient",
+                });
+            }
+        }
+
         return res.status(200).json(
             collection(
                 true,
-                "The status updated succesfully",
+                "The status updated successfully",
                 appointment,
                 "UPDATED"
             )

@@ -3,6 +3,7 @@ const Appointment = require("../models/Appointment");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
 const { notifyUser } = require("../utils/notificationHelper");
+const sendMessage = require("../utils/mail");
 
 let ioInstance;
 
@@ -20,10 +21,10 @@ let ioInstance;
  */
 const sendReminder = async (appointment, timeLabel) => {
   try {
-    console.log(`hi ${new Date().getTime()}` )
+
     // Fetch patient and doctor records in parallel for efficiency
     const [patientRecord, doctorRecord] = await Promise.all([
-      Patient.findById(appointment.patientId).populate('userId', 'fullName'),
+      Patient.findById(appointment.patientId).populate('userId', 'fullName email'),
       Doctor.findById(appointment.doctorId).populate('userId', 'fullName')
     ]);
 
@@ -53,6 +54,17 @@ const sendReminder = async (appointment, timeLabel) => {
       appointmentId: appointment._id,
       timeLabel,
     });
+
+    const mailOptions = {    
+      from: "Health Center",    
+      to: patientRecord.userId.email,    
+      subject: "Reminder appointment",    
+      html: `<div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px;"> 
+              <h2 style="color: #333;">Hello!</h2>
+              <p>Reminder: Your appointment with Dr. ${doctorName} is in ${timeLabel}</p>
+            </div>`
+    };
+    const result = await sendMessage(mailOptions);
   } catch (err) {
     console.error("Failed to send reminder:", err.message);
   }
