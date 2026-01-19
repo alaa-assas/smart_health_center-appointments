@@ -1,9 +1,7 @@
 const Review = require("../models/Review");
+const Patient = require("../models/Patient"); 
 const Appointment = require("../models/Appointment");
 const collection = require("../utils/collection");
-const getUserIdFromAccessToken = require("../utils/getUserIdFromAccessToken")
-const cookieService = require("../utils/cookieService");
-const tokenService = require("../utils/tokenService");
 
 class ReviewController {
 
@@ -17,17 +15,18 @@ class ReviewController {
      */
     async create(req, res, next) {
         const {appointmentId, stars, comment} = req.body;
+        const userId = req.user.id; 
 
-        // Get and verify user ID from access token in cookie
-        let patientId;
-        try {
-            patientId = getUserIdFromAccessToken(req);
-        } catch (err) {
-            return res.status(401).json(collection(false, err.message || "Unauthorized", null, "ERROR"));
+        const patientRecord = await Patient.findOne({ userId });
+        if (!patientRecord) {
+            return res.status(404).json(collection(false, "Patient profile not found", null, "ERROR"));
         }
 
+        const patientId = patientRecord._id;
+
         const appointment = await Appointment.findById(appointmentId);
-        if (!appointment || appointment.patient.toString() !== patientId) {
+
+        if (!appointment || !appointment.patientId.equals(patientId)) {
             return res.status(404).json(collection(false, "Appointment not found or not owned by patient", null, "ERROR"));
         }
 
@@ -48,7 +47,6 @@ class ReviewController {
 
         await review.save();
         return res.status(201).json(collection(true, "Review created successfully", review, "SUCCESS"));
-
     }
 
     /**
@@ -61,13 +59,7 @@ class ReviewController {
     async update(req, res, next) {
         const {id} = req.params;
         const {stars, comment} = req.body;
-
-        let patientId;
-        try {
-            patientId = getUserIdFromAccessToken(req);
-        } catch (err) {
-            return res.status(401).json(collection(false, err.message || "Unauthorized", null, "ERROR"));
-        }
+        const patientId = req.user.id; 
 
         const review = await Review.findById(id).populate("appointmentId");
         if (!review) {
@@ -94,16 +86,8 @@ class ReviewController {
      * optionally filtered by creation date.
      */
     async getAll(req, res, next) {
-        let userId, isAdmin = false;
-        try {
-            const decoded = tokenService.verifyAccessToken(cookieService.getAccessToken(req));
-            userId = decoded.id;
-            isAdmin = decoded.role === "admin";
-        } catch (err) {
-            return res.status(401).json(collection(false, "Admin access required", null, "ERROR"));
-        }
 
-        if (!isAdmin) {
+        if (req.user.role !== "admin") {
             return res.status(403).json(collection(false, "Forbidden: Admins only", null, "ERROR"));
         }
 
@@ -134,13 +118,8 @@ class ReviewController {
      */
     async getById(req, res, next) {
         const {id} = req.params;
-
-        let userId;
-        try {
-            userId = getUserIdFromAccessToken(req);
-        } catch (err) {
-            return res.status(401).json(collection(false, "Unauthorized", null, "ERROR"));
-        }
+        const userId = req.user.id;
+        const userRole = req.user.role; 
 
         const review = await Review.findById(id).populate({
             path: "appointmentId",
@@ -157,15 +136,7 @@ class ReviewController {
         const appointment = review.appointmentId;
         const isPatient = appointment.patient._id.toString() === userId;
         const isDoctor = appointment.doctor._id.toString() === userId;
-
-        // Also check if user is admin (if role is in token)
-        let isAdmin = false;
-        try {
-            const decoded = tokenService.verifyAccessToken(cookieService.getAccessToken(req));
-            isAdmin = decoded.role === "admin";
-        } catch (e) {
-
-        }
+        const isAdmin = userRole === "admin"; 
 
         if (!isAdmin && !isPatient && !isDoctor) {
             return res.status(403).json(collection(false, "Access denied", null, "ERROR"));
@@ -183,13 +154,7 @@ class ReviewController {
      */
     async delete(req, res, next) {
         const {id} = req.params;
-
-        let patientId;
-        try {
-            patientId = getUserIdFromAccessToken(req);
-        } catch (err) {
-            return res.status(401).json(collection(false, "Unauthorized", null, "ERROR"));
-        }
+        const patientId = req.user.id; 
 
         const review = await Review.findById(id).populate("appointmentId");
         if (!review) {
