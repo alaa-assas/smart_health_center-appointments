@@ -2,19 +2,21 @@ const Appointment = require("../models/Appointment");
 const AuditLog = require("../models/AuditLog");
 const asyncHandler = require("../utils/asyncHanlder");
 const ExportService = require("../services/export.service");
+const collection = require("../utils/collection");
 const mongoose = require("mongoose");
 
 class ReportController {
-    //Helper to log reporting actions to AuditLog
+
+    // Helper to log reporting actions to AuditLog
     logReportAction = async (userId, action, details) => {
         await AuditLog.create({
             userId,
             action,
             entity: "Report",
-            entityId: null, // Reports are virtual entities
+            entityId: null,
+            details
         });
     };
-
 
     // @desc    Get detailed appointment report with filters
     // @route   GET /api/v1/admin/reports/appointments
@@ -23,7 +25,6 @@ class ReportController {
         const { from, to, doctorId, specialtyId, status, page = 1, limit = 10 } = req.query;
         const skip = (page - 1) * limit;
 
-        // 1. Build Match Stage
         const matchStage = {};
         if (from || to) {
             matchStage.date = {};
@@ -33,10 +34,8 @@ class ReportController {
         if (doctorId) matchStage.doctorId = new mongoose.Types.ObjectId(doctorId);
         if (status) matchStage.status = status;
 
-        // 2. Aggregation Pipeline
         const pipeline = [
             { $match: matchStage },
-            // Lookup Doctor and their User details for name
             {
                 $lookup: {
                     from: "doctors",
@@ -55,7 +54,6 @@ class ReportController {
                 }
             },
             { $unwind: "$doctorUserDetails" },
-            // Lookup Specialty
             {
                 $lookup: {
                     from: "specialties",
@@ -65,9 +63,9 @@ class ReportController {
                 }
             },
             { $unwind: "$specialtyInfo" },
-            // Filter by Specialty if provided
-            ...(specialtyId ? [{ $match: { "specialtyInfo._id": new mongoose.Types.ObjectId(specialtyId) } }] : []),
-            // Lookup Patient and their User details
+            ...(specialtyId
+                ? [{ $match: { "specialtyInfo._id": new mongoose.Types.ObjectId(specialtyId) } }]
+                : []),
             {
                 $lookup: {
                     from: "patients",
@@ -86,7 +84,6 @@ class ReportController {
                 }
             },
             { $unwind: "$patientUserDetails" },
-            // Project final shape
             {
                 $project: {
                     _id: 1,
@@ -110,105 +107,123 @@ class ReportController {
         ];
 
         const result = await Appointment.aggregate(pipeline);
+        const total = result[0].metadata[0]?.total || 0;
 
-        // Log the action
-        await logReportAction(req.user.id, "REPORT_VIEW", "Appointment List");
+        await this.logReportAction(req.user.id, "REPORT_VIEW", "Appointment List");
 
-        res.status(200).json({
-            success: true,
-            count: result[0].metadata[0]?.total || 0,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total: result[0].metadata[0]?.total || 0
-            },
-            data: result[0].data
-        });
+        return res.status(200).json(
+            collection(
+                true,
+                "Appointments report fetched successfully",
+                {
+                    pagination: {
+                        page: Number(page),
+                        limit: Number(limit),
+                        total
+                    },
+                    data: result[0].data
+                },
+                "SUCCESS"
+            )
+        );
     });
 
     // @desc    Get summary statistics for dashboard
     // @route   GET /api/v1/admin/reports/summary
     // @access  Private/Admin
-
     getSummaryReport = asyncHandler(async (req, res) => {
-        // Stats by Status
         const statusStats = await Appointment.aggregate([
             { $group: { _id: "$status", count: { $sum: 1 } } }
         ]);
 
-        // Stats by Specialty
         const specialtyStats = await Appointment.aggregate([
             {
                 $lookup: {
                     from: "doctors",
                     localField: "doctorId",
                     foreignField: "_id",
-                    as: "doc"
+                    as: "doctor"
                 }
             },
-            { $unwind: "$doc" },
+            { $unwind: "$doctor" },
             {
                 $lookup: {
                     from: "specialties",
-                    localField: "doc.specialtyId",
+                    localField: "doctor.specialtyId",
                     foreignField: "_id",
-                    as: "spec"
+                    as: "specialty"
                 }
             },
-            { $unwind: "$spec" },
-            { $group: { _id: "$spec.name", count: { $sum: 1 } } }
+            { $unwind: "$specialty" },
+            { $group: { _id: "$specialty.name", count: { $sum: 1 } } }
         ]);
 
-        await logReportAction(req.user.id, "REPORT_VIEW", "Summary Statistics");
+        await this.logReportAction(req.user.id, "REPORT_VIEW", "Summary Statistics");
 
-        res.status(200).json({
-            success: true,
-            data: {
-                appointmentsByStatus: statusStats.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
-                appointmentsBySpecialty: specialtyStats.map(s => ({ name: s._id, count: s.count }))
-            }
-        });
+        return res.status(200).json(
+            collection(
+                true,
+                "Summary report fetched successfully",
+                {
+                    appointmentsByStatus: statusStats.reduce(
+                        (acc, curr) => ({ ...acc, [curr._id]: curr.count }),
+                        {}
+                    ),
+                    appointmentsBySpecialty: specialtyStats.map(s => ({
+                        name: s._id,
+                        count: s.count
+                    }))
+                },
+                "SUCCESS"
+            )
+        );
     });
 
     // @desc    Get audit logs report
     // @route   GET /api/v1/admin/reports/audit-logs
     // @access  Private/Admin
-
     getAuditLogsReport = asyncHandler(async (req, res) => {
         const logs = await AuditLog.find()
             .populate("userId", "name email role")
             .sort({ createdAt: -1 })
             .limit(100);
 
-        res.status(200).json({
-            success: true,
-            data: logs
-        });
+        return res.status(200).json(
+            collection(
+                true,
+                "Audit logs fetched successfully",
+                logs,
+                "SUCCESS"
+            )
+        );
     });
 
+    // @desc    Export report as Excel or PDF
+    // @route   GET /api/v1/admin/reports/export
+    // @access  Private/Admin
     exportReport = asyncHandler(async (req, res) => {
         const { format, from, to, doctorId, specialtyId, status } = req.query;
 
-        // Early validation of format to avoid unnecessary DB load
-        if (!['xlsx', 'pdf'].includes(format)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid format. Use 'xlsx' or 'pdf'."
-            });
+        if (!["xlsx", "pdf"].includes(format)) {
+            return res.status(400).json(
+                collection(
+                    false,
+                    "Invalid format. Use 'xlsx' or 'pdf'.",
+                    null,
+                    "VALIDATION_ERROR"
+                )
+            );
         }
 
-        // Build the dynamic filter object
         const matchStage = {};
         if (from || to) {
             matchStage.date = {};
             if (from) matchStage.date.$gte = new Date(from);
             if (to) matchStage.date.$lte = new Date(to);
         }
-
         if (doctorId) matchStage.doctorId = new mongoose.Types.ObjectId(doctorId);
         if (status) matchStage.status = status;
 
-        // Advanced Aggregation Pipeline to gather all necessary report data
         const reportData = await Appointment.aggregate([
             { $match: matchStage },
             {
@@ -229,7 +244,6 @@ class ReportController {
                 }
             },
             { $unwind: "$specialty" },
-            // Optional filter for specialty
             ...(specialtyId
                 ? [{ $match: { "specialty._id": new mongoose.Types.ObjectId(specialtyId) } }]
                 : []),
@@ -276,38 +290,34 @@ class ReportController {
             { $sort: { createdAt: -1 } }
         ]);
 
-        // Track the export action in Audit Logs
-        await AuditLog.create({
-            userId: req.user.id,
-            action: "REPORT_EXPORT",
-            entity: "Appointment"
-        });
+        await this.logReportAction(
+            req.user.id,
+            "REPORT_EXPORT",
+            `Export format: ${format}`
+        );
 
         const fileName = `Appointment_Report_${Date.now()}`;
 
-        // Execute Export
-        if (format === 'xlsx') {
+        if (format === "xlsx") {
             const buffer = await ExportService.toExcel(reportData, "Appointments");
             res.setHeader(
-                'Content-Type',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                "Content-Type",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             );
             res.setHeader(
-                'Content-Disposition',
+                "Content-Disposition",
                 `attachment; filename=${fileName}.xlsx`
             );
             return res.send(buffer);
         }
 
-        // PDF Export
-        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
-            'Content-Disposition',
+            "Content-Disposition",
             `attachment; filename=${fileName}.pdf`
         );
         return ExportService.toPDF(reportData, "Appointment Report", res);
     });
 }
+
 module.exports = new ReportController();
-
-
