@@ -66,7 +66,7 @@ class ReviewController {
             return res.status(404).json(collection(false, "Review not found", null, "ERROR"));
         }
 
-        if (review.appointmentId?.patient?.toString() !== patientId) {
+        if (!review.appointmentId?.patientId.equals(patientId)) {
             return res.status(403).json(collection(false, "Not authorized to update this review", null, "ERROR"));
         }
 
@@ -100,10 +100,21 @@ class ReviewController {
         }
 
         const reviews = await Review.find(filter)
-            .populate("appointmentId", "patient doctor")
-            .populate("appointmentId.patient", "fullName email")
-            .populate("appointmentId.doctor", "fullName specialty")
-            .sort({createdAt: -1});
+        .populate({
+            path: "appointmentId",
+            populate: [
+                {
+                    path: "patientId",
+                    populate: { path: "userId", select: "fullName email" }
+                },
+                {
+                    path: "doctorId",
+                    populate: { path: "userId", select: "fullName" },
+                    populate: { path: "specialtyId", select: "name" }
+                }
+            ]
+        })
+        .sort({ createdAt: -1 });
 
         return res.json(collection(true, "Reviews retrieved successfully", reviews, "SUCCESS"));
     }
@@ -117,15 +128,21 @@ class ReviewController {
      * is the related patient, doctor, or an admin.
      */
     async getById(req, res, next) {
-        const {id} = req.params;
+        const { id } = req.params;
         const userId = req.user.id;
-        const userRole = req.user.role; 
+        const userRole = req.user.role;
 
         const review = await Review.findById(id).populate({
             path: "appointmentId",
             populate: [
-                {path: "patient", select: "fullName email"},
-                {path: "doctor", select: "fullName specialty"},
+            {
+                path: "patientId",
+                populate: { path: "userId", select: "fullName email" }
+            },
+            {
+                path: "doctorId",
+                populate: { path: "userId", select: "fullName email" }
+            }
             ],
         });
 
@@ -134,9 +151,10 @@ class ReviewController {
         }
 
         const appointment = review.appointmentId;
-        const isPatient = appointment.patient._id.toString() === userId;
-        const isDoctor = appointment.doctor._id.toString() === userId;
-        const isAdmin = userRole === "admin"; 
+
+        const isPatient = appointment?.patientId?.userId?._id?.toString() == userId;
+        const isDoctor = appointment?.doctorId?.userId?._id?.toString() == userId;
+        const isAdmin = userRole == "admin";
 
         if (!isAdmin && !isPatient && !isDoctor) {
             return res.status(403).json(collection(false, "Access denied", null, "ERROR"));
@@ -154,14 +172,21 @@ class ReviewController {
      */
     async delete(req, res, next) {
         const {id} = req.params;
-        const patientId = req.user.id; 
+        const userId = req.user.id; 
+
+        const patientRecord = await Patient.findOne({ userId });
+        if (!patientRecord) {
+            return res.status(404).json(collection(false, "Patient profile not found", null, "ERROR"));
+        }
+
+        const patientId = patientRecord._id; 
 
         const review = await Review.findById(id).populate("appointmentId");
         if (!review) {
             return res.status(404).json(collection(false, "Review not found", null, "ERROR"));
         }
-
-        if (review.appointmentId?.patient?.toString() !== patientId) {
+        
+        if (!review.appointmentId?.patientId.equals(patientId)) {
             return res.status(403).json(collection(false, "Not authorized to delete this review", null, "ERROR"));
         }
 
