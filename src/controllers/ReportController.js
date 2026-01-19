@@ -7,7 +7,39 @@ const mongoose = require("mongoose");
 
 class ReportController {
 
-    // Helper to log reporting actions to AuditLog
+    /**
+     *
+     * @description
+     * Helper function responsible for recording reporting-related actions
+     * into the AuditLog collection.
+     *
+     * This function is used to track administrative interactions with
+     * reports such as:
+     * - Viewing reports
+     * - Exporting reports
+     * - Generating summaries
+     *
+     * Reports are considered **virtual entities**, therefore:
+     * - entityId is always set to null
+     *
+     * The `details` parameter allows storing additional contextual
+     * information related to the report action (e.g. report type,
+     * filters applied, export format).
+     *
+     * @param {ObjectId} userId   - The ID of the user performing the action
+     * @param {String} action    - The action identifier (e.g. REPORT_VIEW, REPORT_EXPORT)
+     * @param {any} details      - Optional metadata or description for the action
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await logReportAction(
+     *   req.user.id,
+     *   "REPORT_EXPORT",
+     *   { format: "xlsx", dateRange: "2024-01-01 → 2024-01-31" }
+     * );
+     */
+
     logReportAction = async (userId, action, details) => {
         await AuditLog.create({
             userId,
@@ -18,9 +50,52 @@ class ReportController {
         });
     };
 
-    // @desc    Get detailed appointment report with filters
-    // @route   GET /api/v1/admin/reports/appointments
-    // @access  Private/Admin
+    /**
+     * @function getAppointmentsReport
+     *
+     * @description
+     * Generates a detailed, paginated appointments report for admin users.
+     * The report supports multiple optional filters and joins data from
+     * related collections to provide a complete view of each appointment.
+     *
+     * Supported filters:
+     * - Date range (from / to)
+     * - Doctor ID
+     * - Specialty ID
+     * - Appointment status
+     *
+     * The report aggregates data from:
+     * - Appointments
+     * - Doctors
+     * - Patients
+     * - Users
+     * - Specialties
+     *
+     * MongoDB Aggregation Pipeline is used with:
+     * - $match for dynamic filtering
+     * - $lookup for joining related collections
+     * - $project for shaping the final response
+     * - $facet for pagination and total count in a single query
+     *
+     * @route   GET /api/v1/admin/reports/appointments
+     * @access  Private/Admin
+     *
+     * @query
+     * @param {String}  [from]         - Start date (ISO string)
+     * @param {String}  [to]           - End date (ISO string)
+     * @param {String}  [doctorId]     - Doctor ObjectId
+     * @param {String}  [specialtyId]  - Specialty ObjectId
+     * @param {String}  [status]       - Appointment status
+     * @param {Number}  [page=1]       - Page number for pagination
+     * @param {Number}  [limit=10]     - Number of records per page
+     *
+     * @returns {Object} Standard API response containing:
+     * - pagination metadata (page, limit, total)
+     * - array of appointment report records
+     *
+     * @example
+     * GET /api/v1/admin/reports/appointments?from=2024-01-01&to=2024-01-31&status=Completed
+     */
     getAppointmentsReport = asyncHandler(async (req, res) => {
         const { from, to, doctorId, specialtyId, status, page = 1, limit = 10 } = req.query;
         const skip = (page - 1) * limit;
@@ -128,9 +203,33 @@ class ReportController {
         );
     });
 
-    // @desc    Get summary statistics for dashboard
-    // @route   GET /api/v1/admin/reports/summary
-    // @access  Private/Admin
+    /**
+     *
+     * @description
+     * Generates high-level summary statistics for the admin dashboard.
+     * This report provides an aggregated overview of appointments,
+     * useful for analytics and monitoring system activity.
+     *
+     * Included statistics:
+     * - Total number of appointments grouped by status
+     * - Total number of appointments grouped by medical specialty
+     *
+     * The data is generated using MongoDB aggregation pipelines
+     * with grouping and collection lookups.
+     *
+     * An audit log entry is recorded to track report access.
+     *
+     * @route   GET /api/v1/admin/reports/summary
+     * @access  Private/Admin
+     *
+     * @returns {Object} Standard API response containing:
+     * - appointmentsByStatus: Object keyed by appointment status
+     * - appointmentsBySpecialty: Array of specialties with counts
+     *
+     * @example
+     * GET /api/v1/admin/reports/summary
+     */
+
     getSummaryReport = asyncHandler(async (req, res) => {
         const statusStats = await Appointment.aggregate([
             { $group: { _id: "$status", count: { $sum: 1 } } }
@@ -179,9 +278,31 @@ class ReportController {
         );
     });
 
-    // @desc    Get audit logs report
-    // @route   GET /api/v1/admin/reports/audit-logs
-    // @access  Private/Admin
+    /**
+     * @description
+     * Retrieves a list of recent audit log entries for administrative review.
+     * This report is intended for monitoring system activity, security events,
+     * and administrative actions across the platform.
+     *
+     * Each audit log entry includes:
+     * - User information (name, email, role)
+     * - Action performed
+     * - Target entity and entity ID (if applicable)
+     * - Timestamp of the action
+     *
+     * The logs are:
+     * - Sorted by most recent first
+     * - Limited to the latest 100 records for performance and clarity
+     *
+     * @route   GET /api/v1/admin/reports/audit-logs
+     * @access  Private/Admin
+     *
+     * @returns {Object} Standard API response containing an array of audit logs
+     *
+     * @example
+     * GET /api/v1/admin/reports/audit-logs
+     */
+
     getAuditLogsReport = asyncHandler(async (req, res) => {
         const logs = await AuditLog.find()
             .populate("userId", "name email role")
@@ -198,9 +319,38 @@ class ReportController {
         );
     });
 
-    // @desc    Export report as Excel or PDF
-    // @route   GET /api/v1/admin/reports/export
-    // @access  Private/Admin
+    /**
+     * @description
+     * Exports appointment report data in either Excel (XLSX) or PDF format
+     * for administrative users.
+     *
+     * The exported report supports advanced filtering options similar to
+     * the appointments report, allowing administrators to export
+     * customized datasets.
+     *
+     * Workflow:
+     * 1. Validate requested export format
+     * 2. Build dynamic filter object based on query parameters
+     * 3. Aggregate and enrich appointment data using MongoDB pipelines
+     * 4. Log the export action to AuditLog
+     * 5. Generate and stream the file to the client
+     *
+     * @route   GET /api/v1/admin/reports/export
+     * @access  Private/Admin
+     *
+     * @query
+     * @param {String} format        - Export format ("xlsx" | "pdf")
+     * @param {String} [from]        - Start date (ISO format)
+     * @param {String} [to]          - End date (ISO format)
+     * @param {String} [doctorId]    - Doctor ObjectId
+     * @param {String} [specialtyId]- Specialty ObjectId
+     * @param {String} [status]      - Appointment status
+     *
+     * @returns {File} Downloadable Excel or PDF report
+     *
+     * @example
+     * GET /api/v1/admin/reports/export?format=xlsx&status=Completed
+     */
     exportReport = asyncHandler(async (req, res) => {
         const { format, from, to, doctorId, specialtyId, status } = req.query;
 
