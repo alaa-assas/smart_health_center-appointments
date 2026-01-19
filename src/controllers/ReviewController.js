@@ -59,7 +59,14 @@ class ReviewController {
     async update(req, res, next) {
         const {id} = req.params;
         const {stars, comment} = req.body;
-        const patientId = req.user.id; 
+        const userId = req.user.id; 
+
+        const patientRecord = await Patient.findOne({ userId });
+        if (!patientRecord) {
+            return res.status(404).json(collection(false, "Patient profile not found", null, "ERROR"));
+        }
+
+        const patientId = patientRecord._id;
 
         const review = await Review.findById(id).populate("appointmentId");
         if (!review) {
