@@ -639,3 +639,11 @@ Query Parameters:
   ]
 }
 ```
+## API Documentation
+
+You can explore and test the API using our Postman collection:
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/erp-kabbour-631059/workspace/smart-health-center-appointments/collection/49953951-c854a349-5baa-46fa-b62c-f854035a9c10?action=share&creator=49953951)
+
+Or visit the collection directly:  
+[Smart Health Center Appointments - Postman Collection](https://www.postman.com/erp-kabbour-631059/workspace/smart-health-center-appointments/collection/49953951-c854a349-5baa-46fa-b62c-f854035a9c10?action=share&creator=49953951)
